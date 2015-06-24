@@ -3,30 +3,31 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 
+
 class Interaction:
     def __init__(self, interaction_name, x_axis, repulsive_amplitude, repulsive_time_constant, attractive_amplitude,
                  attractive_time_constant, depth, power):
         self.interaction_name = interaction_name
-        distance_function=[0 for i in x_axis]
+        distance_function = [0 for i in x_axis]
 
-        #To make equation easier to read
+        # To make equation easier to read
         aad = attractive_amplitude * depth
         rad = repulsive_amplitude * depth
         atc = attractive_time_constant
         rtc = repulsive_time_constant
 
         for xi in x_axis:
-            distance_function[xi] = ((-aad * math.exp(-xi/atc )) + aad + (rad * math.exp(-xi/rtc)) - rad)**power
+            distance_function[xi] = ((-aad * math.exp(-xi/atc)) + aad + (rad * math.exp(-xi/rtc)) - rad)**power
         self.distance_function = distance_function
 
-    def plot_graph(self,x_axis):
+    def plot_graph(self, x_axis):
         number_points = 400
-        plt.plot(x_axis[:number_points],self.distance_function[:number_points])
+        plt.plot(x_axis[:number_points], self.distance_function[:number_points])
         plt.xlabel('$x$')
         plt.ylabel('$y$')
         plt.title('Two Dimensional')
         print("Plotting: " + self.interaction_name)
-        return
+
 
 class DefaultInteraction(Interaction):
     def __init__(self, x_axis, repulsive_amplitude, repulsive_time_constant):
@@ -35,6 +36,7 @@ class DefaultInteraction(Interaction):
         for xi in x_axis:
             Default[xi] = (repulsive_amplitude * math.exp(-xi/repulsive_time_constant))
         self.distance_function = Default
+
 
 class InteractionManager:
     """
@@ -55,7 +57,7 @@ class InteractionManager:
         self.interaction_map = {}
         self.interaction_matrix = get_interactions()
 
-    def add_default_interaction(self,index, repulsive_amplitude,repulsive_time_constant=5):
+    def add_default_interaction(self, index, repulsive_amplitude, repulsive_time_constant=5):
         """
         Adds default repulsive interaction type
         """
@@ -72,7 +74,7 @@ class InteractionManager:
             repulsive amplitude : Repulsive Amplitude
             repulsive_time_constant : Repulsive Time Constant
             depth : Depth
-            attractive_amplitiude: Attractive Amplitude
+            attractive_amplitude: Attractive Amplitude
             power : Power
 
         Returns:
@@ -102,20 +104,5 @@ class InteractionManager:
         plt.show()
 
     def get_initial_coordinates(self):
-        atom_coordinates = np.zeros((self.number_signals, 3),dtype=float)
-
-        # Initialising atom coordinates
-        """
-        for j in range(self.number_hydrogen_signals+1,self.number_signals):
-            for k in range(self.number_hydrogen_signals,j):
-                if (self.interaction_matrix[k][j]) == 4:
-                    atom_coordinates[k]=atom_coordinates[j]+[0,15,0]
-        for j in range(self.number_hydrogen_signals,self.number_signals):
-            for k in range(self.number_hydrogen_signals):
-                if (self.interaction_matrix[k][j]) == 2:
-                    atom_coordinates[k]=atom_coordinates[j]+[0, 0, 11]
-        """
-
-        atom_coordinates = np.random.uniform(100, 100, (self.number_signals,3))
-
+        atom_coordinates = np.random.uniform(100, 100, (self.number_signals, 3))
         return atom_coordinates

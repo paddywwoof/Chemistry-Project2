@@ -1,10 +1,12 @@
 __author__ = 'martin'
 import math
-from interactions import InteractionManager
-from get_interactions import get_hexenal_interactions
-import scipy.optimize as opt
 import random
 import time
+
+import scipy.optimize as opt
+
+from interactions import InteractionManager
+from get_interactions import get_hexenal_interactions
 
 last_write = time.time()
 
@@ -33,7 +35,7 @@ def get_response_value(atom_coordinates, interaction_manager):
                 response += interaction_manager.interaction_response(i, j, magnitude(v2-v1))
     print(response)
     if time.time()-last_write > 0.5:
-        write_coordinates_to_xyz("outfile.xyz", interaction_manager, atom_coordinates)
+        write_coordinates_to_xyz("resources/tempfile.xyz", interaction_manager, atom_coordinates)
         last_write = time.time()
     return response
 
@@ -46,11 +48,10 @@ def magnitude(vec):
 
 
 def main():
+    start_time = time.time()
     interaction_manager = get_interaction_manager()
     interaction_manager.plot_all_interactions()
     best_atom_coordinates = interaction_manager.get_initial_coordinates()
-
-    write_coordinates_to_xyz('outfile.xyz', interaction_manager, best_atom_coordinates)
 
     best_response_value = get_response_value(best_atom_coordinates, interaction_manager)
 
@@ -63,7 +64,7 @@ def main():
                 "args": (interaction_manager,)
                 }
 
-            out_min = opt.basinhopping(get_response_value, x0=best_atom_coordinates, niter=100, minimizer_kwargs=minimizer_kwargz, T=30, stepsize=1)
+            out_min = opt.basinhopping(get_response_value, x0=best_atom_coordinates, niter=10, minimizer_kwargs=minimizer_kwargz, T=30, stepsize=0.5)
             attempt_atom_coordinates = out_min.x
             attempt_response_value = out_min.fun
             print(attempt_atom_coordinates)
@@ -81,7 +82,9 @@ def main():
             break
 
     best_atom_coordinates = best_atom_coordinates.reshape((interaction_manager.number_signals, 3))
-    write_coordinates_to_xyz("resources/outfile.xyz", interaction_manager, best_atom_coordinates)
+    write_coordinates_to_xyz("resources/solution.xyz", interaction_manager, best_atom_coordinates)
+    running_time = time.time()-start_time
+    print("Running time: ", running_time, "s")
     return best_response_value, best_atom_coordinates
 
 
@@ -98,6 +101,7 @@ def write_coordinates_to_xyz(filename, interaction_manager, best_atom_coordinate
 
 if __name__ == "__main__":
     response_value, coordinates = main()
+
 
 
 
