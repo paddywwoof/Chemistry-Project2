@@ -32,11 +32,11 @@ class Interaction:
 
 
 class DefaultInteraction(Interaction):
-    def __init__(self, x_axis, repulsive_amplitude, repulsive_time_constant):
+    def __init__(self, x_axis, repulsive_amplitude, repulsive_time_constant, depth):
         self.interaction_name = "Default"
         Default = [0 for i in x_axis]
         for xi in x_axis:
-            Default[xi] = (repulsive_amplitude * math.exp(-xi/repulsive_time_constant))
+            Default[xi] = (repulsive_amplitude*depth * math.exp(-xi/repulsive_time_constant))
         self.distance_function = Default
 
 
@@ -59,11 +59,11 @@ class InteractionManager:
         self.interaction_map = {}
         self.interaction_matrix = get_interactions()
 
-    def add_default_interaction(self, index, repulsive_amplitude, repulsive_time_constant=5):
+    def add_default_interaction(self,index, interaction_name, repulsive_amplitude, repulsive_time_constant, depth):
         """
         Adds default repulsive interaction type
         """
-        new_interaction = DefaultInteraction(self.x_axis, repulsive_amplitude, repulsive_time_constant)
+        new_interaction = DefaultInteraction(self.x_axis, repulsive_amplitude, repulsive_time_constant,depth)
         self.interaction_map[index] = new_interaction
 
     def add_new_interaction(self, index, interaction_name, repulsive_amplitude, repulsive_time_constant, depth,

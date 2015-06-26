@@ -2,6 +2,7 @@ __author__ = 'martin'
 import math
 import random
 import time
+from simulatedannealing import  simulated_annealing
 
 import scipy.optimize as opt
 
@@ -14,7 +15,7 @@ last_write = time.time()
 def get_interaction_manager():
     interaction_manager = InteractionManager(number_carbon_signals=6, number_hydrogen_signals=10,
                                              get_interactions=get_hexenal_interactions, axis_width=1001)
-    interaction_manager.add_default_interaction(0, repulsive_amplitude=0.8, repulsive_time_constant=5)
+    interaction_manager.add_default_interaction(0, "Default Repuslive", repulsive_amplitude=0.8, repulsive_time_constant=5, depth=1)
     interaction_manager.add_new_interaction(1, "COSY 3-Bond H-H   ", repulsive_amplitude=0.8, repulsive_time_constant=8.2, depth=1, attractive_amplitude=0.6, attractive_time_constant=200, power=3)
     interaction_manager.add_new_interaction(2, "HSQC 1-Bond H-C   ", repulsive_amplitude=0.8, repulsive_time_constant=2.3, depth=1, attractive_amplitude=0.6, attractive_time_constant=200, power=3)
     interaction_manager.add_new_interaction(3, "HMBC 2/3 Bond H-C ", repulsive_amplitude=0.8, repulsive_time_constant=6.5, depth=1, attractive_amplitude=0.6, attractive_time_constant=200, power=3)
@@ -59,28 +60,9 @@ def main():
     number_attempts = 5  # Hardcoded
 
     for attempt_number in range(number_attempts):
-        try:
-            minimizer_kwargz = {
-                "method": "Nelder-Mead",
-                "args": (interaction_manager,)
-                }
+        best_atom_coordinates = simulated_annealing(best_atom_coordinates, interaction_manager, get_response_value)
 
-            out_min = opt.basinhopping(get_response_value, x0=best_atom_coordinates, niter=30, minimizer_kwargs=minimizer_kwargz, T=30, stepsize=0.5)
-            attempt_atom_coordinates = out_min.x
-            attempt_response_value = out_min.fun
-            print(attempt_atom_coordinates)
 
-            if attempt_response_value < best_response_value:
-                best_atom_coordinates = attempt_atom_coordinates
-                best_response_value = attempt_response_value
-            else:
-                for i in range(interaction_manager.number_signals):
-                    for j in range(0, 3):
-                        print(best_atom_coordinates)
-                        best_atom_coordinates = best_atom_coordinates.reshape((interaction_manager.number_signals, 3))
-                        best_atom_coordinates[i][j] = best_atom_coordinates[i][j]+random.randrange(-2, 2)
-        except KeyboardInterrupt:
-            break
 
     best_atom_coordinates = best_atom_coordinates.reshape((interaction_manager.number_signals, 3))
     write_coordinates_to_xyz("resources/tempfile.xyz", interaction_manager, best_atom_coordinates)
