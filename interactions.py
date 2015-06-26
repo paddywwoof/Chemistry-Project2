@@ -18,6 +18,8 @@ class Interaction:
 
         for xi in x_axis:
             distance_function[xi] = ((-aad * math.exp(-xi/atc)) + aad + (rad * math.exp(-xi/rtc)) - rad)**power
+            if distance_function[xi]>distance_function[xi-1] and distance_function[xi-1] < distance_function[xi-2]:
+                print("Minima at: ", xi)
         self.distance_function = distance_function
 
     def plot_graph(self, x_axis):

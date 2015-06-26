@@ -33,8 +33,9 @@ def get_response_value(atom_coordinates, interaction_manager):
         for j, v2 in enumerate(atom_coordinates):
             if j < i:
                 response += interaction_manager.interaction_response(i, j, magnitude(v2-v1))
-    print(response)
+
     if time.time()-last_write > 0.5:
+        print(response)
         write_coordinates_to_xyz("resources/tempfile.xyz", interaction_manager, atom_coordinates)
         last_write = time.time()
     return response
@@ -64,7 +65,7 @@ def main():
                 "args": (interaction_manager,)
                 }
 
-            out_min = opt.basinhopping(get_response_value, x0=best_atom_coordinates, niter=10, minimizer_kwargs=minimizer_kwargz, T=30, stepsize=0.5)
+            out_min = opt.basinhopping(get_response_value, x0=best_atom_coordinates, niter=30, minimizer_kwargs=minimizer_kwargz, T=30, stepsize=0.5)
             attempt_atom_coordinates = out_min.x
             attempt_response_value = out_min.fun
             print(attempt_atom_coordinates)
@@ -82,6 +83,7 @@ def main():
             break
 
     best_atom_coordinates = best_atom_coordinates.reshape((interaction_manager.number_signals, 3))
+    write_coordinates_to_xyz("resources/tempfile.xyz", interaction_manager, best_atom_coordinates)
     write_coordinates_to_xyz("resources/solution.xyz", interaction_manager, best_atom_coordinates)
     running_time = time.time()-start_time
     print("Running time: ", running_time, "s")
