@@ -2,8 +2,6 @@ __author__ = 'martin'
 import math
 import random
 import time
-from simulatedannealing import  simulated_annealing
-
 import scipy.optimize as opt
 
 from interactions import InteractionManager
