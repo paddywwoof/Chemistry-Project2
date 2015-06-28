@@ -1,9 +1,6 @@
 __author__ = 'martin'
 import math
-import random
 import time
-
-import scipy.optimize as opt
 
 from interactions import InteractionManager
 from get_interactions import get_hexenal_interactions
