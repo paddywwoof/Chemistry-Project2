@@ -59,28 +59,7 @@ def main():
     number_attempts = 5  # Hardcoded
 
     for attempt_number in range(number_attempts):
-        try:
-            minimizer_kwargz = {
-                "method": "Nelder-Mead",
-                "args": (interaction_manager,)
-                }
-
-            out_min = opt.basinhopping(get_response_value, x0=best_atom_coordinates, niter=30, minimizer_kwargs=minimizer_kwargz, T=30, stepsize=0.5)
-            attempt_atom_coordinates = out_min.x
-            attempt_response_value = out_min.fun
-            print(attempt_atom_coordinates)
-
-            if attempt_response_value < best_response_value:
-                best_atom_coordinates = attempt_atom_coordinates
-                best_response_value = attempt_response_value
-            else:
-                for i in range(interaction_manager.number_signals):
-                    for j in range(0, 3):
-                        print(best_atom_coordinates)
-                        best_atom_coordinates = best_atom_coordinates.reshape((interaction_manager.number_signals, 3))
-                        best_atom_coordinates[i][j] = best_atom_coordinates[i][j]+random.randrange(-2, 2)
-        except KeyboardInterrupt:
-            break
+        best_atom_coordinates = simulated_annealing(best_atom_coordinates, interaction_manager, get_response_value)
 
     best_atom_coordinates = best_atom_coordinates.reshape((interaction_manager.number_signals, 3))
     write_coordinates_to_xyz("resources/tempfile.xyz", interaction_manager, best_atom_coordinates)
