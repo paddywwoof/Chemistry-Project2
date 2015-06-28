@@ -4,8 +4,9 @@ import time
 
 from interactions import InteractionManager
 from get_interactions import get_hexenal_interactions
-
+from simulatedannealing import simulated_annealing
 last_write = time.time()
+import numpy as np
 
 
 def get_interaction_manager():
@@ -54,6 +55,35 @@ def main():
     best_response_value = get_response_value(best_atom_coordinates, interaction_manager)
 
     number_attempts = 5  # Hardcoded
+
+    for x in range(0,1):
+        for atom1_index,atom1 in enumerate(best_atom_coordinates):
+            for atom2_index,atom2 in enumerate(best_atom_coordinates):
+                if atom1.tolist()!=atom2.tolist():
+                    i_type = interaction_manager.interaction_matrix[atom1_index][atom2_index]
+                    if i_type == 1:
+                        if magnitude(atom1 - atom2) > 31*1.5 or magnitude(atom1 - atom2) < 31*0.5:
+                            best_atom_coordinates[atom2_index] = atom1 + [0,31,0]
+                            print(x)
+                            write_coordinates_to_xyz("resources/tempfile.xyz", interaction_manager, best_atom_coordinates)
+                            time.sleep(0.1)
+                    if i_type == 2:
+                        if magnitude(atom1 - atom2) > 12*1.5 or magnitude(atom1 - atom2) < 12*0.5:
+                            best_atom_coordinates[atom2_index] = atom1 + [12,0,0]
+                            write_coordinates_to_xyz("resources/tempfile.xyz", interaction_manager, best_atom_coordinates)
+                            time.sleep(0.1)
+                    if i_type == 3:
+                        if magnitude(atom1 - atom2) > 26*1.5 or magnitude(atom1 - atom2) < 26*0.5:
+                            best_atom_coordinates[atom2_index] = atom1 + [0,0,26]
+                            write_coordinates_to_xyz("resources/tempfile.xyz", interaction_manager, best_atom_coordinates)
+                            time.sleep(0.1)
+                    if i_type == 4:
+                        if magnitude(atom1 - atom2) > 16*1.5 or magnitude(atom1 - atom2) < 16*0.5:
+                            best_atom_coordinates[atom2_index] = atom1 + [16,0,0]
+                            write_coordinates_to_xyz("resources/tempfile.xyz", interaction_manager, best_atom_coordinates)
+                            time.sleep(0.1)
+
+
 
     for attempt_number in range(number_attempts):
         best_atom_coordinates = simulated_annealing(best_atom_coordinates, interaction_manager, get_response_value)

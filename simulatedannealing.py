@@ -1,31 +1,33 @@
 import random
-
-step_size = 1
+from math import exp
+step_size = 0.5
 
 def simulated_annealing(atom_coordinates, interaction_manager, get_response_value):
 
-    t = 100
-    b = 1.01
+    t = 30
+    b = 1.001
 
-    for x in range(0, 10000):
+    while t > 0.00001:
+
         t /= b
 
-        response_value = get_response_value(atom_coordinates,interaction_manager)
+        response_value = get_response_value(atom_coordinates, interaction_manager)
         index = random.randrange(0, len(atom_coordinates))
         atom = atom_coordinates[index]
-        delta = [random.uniform(0, step_size) for i in range(0, 3)]
+        delta = [0,0,0]
+        delta[random.randrange(0,3)] = random.uniform(0, step_size*max(t, 1))
         atom += delta
         new_response_value = get_response_value(atom_coordinates, interaction_manager)
 
         deltaE = new_response_value - response_value
 
-        if deltaE<0:
+        if deltaE < 0:
             continue
-        elif T>0:
-            if random.uniform(0,1)<exp(deltaE*100.0/t):
+        elif deltaE >=0 and t>0:
+            if random.uniform(0, 1) < exp(-deltaE*10.0/t):
                 continue
-            else:
-                atom -= delta
+        atom -= delta
+    print(t)
     return atom_coordinates
 
 
