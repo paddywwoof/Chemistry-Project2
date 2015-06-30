@@ -19,7 +19,7 @@ class Interaction:
         for xi in x_axis:
             distance_function[xi] = ((-aad * math.exp(-xi/atc)) + aad + (rad * math.exp(-xi/rtc)) - rad)**power
             if distance_function[xi]>distance_function[xi-1] and distance_function[xi-1] < distance_function[xi-2]:
-                print("Minima at: ", xi)
+                print(self.interaction_name+", Minima at: ", xi)
         self.distance_function = distance_function
 
     def plot_graph(self, x_axis):
@@ -44,7 +44,7 @@ class InteractionManager:
     """
     Managers the different types of interaction (e.g. HSQC, COSY etc, and their response values)
     """
-    def __init__(self, number_carbon_signals, number_hydrogen_signals, get_interactions, axis_width):
+    def __init__(self, get_interactions, axis_width):
         """
         Args:
             axis_width: Number of points to generate function mapping for
@@ -52,12 +52,15 @@ class InteractionManager:
         Returns:
             None
         """
-        self.number_carbon_signals = number_carbon_signals
-        self.number_hydrogen_signals = number_hydrogen_signals
-        self.number_signals = number_carbon_signals + number_hydrogen_signals
+
         self.x_axis = range(axis_width)
         self.interaction_map = {}
         self.interaction_matrix = get_interactions()
+        self.atom_types = self.get_atom_types()
+        self.number_carbon_signals = self.atom_types.count("C")
+        self.number_hydrogen_signals= self.atom_types.count("H")
+        self.number_signals = self.number_carbon_signals + self.number_hydrogen_signals
+
 
     def add_default_interaction(self,index, interaction_name, repulsive_amplitude, repulsive_time_constant, depth):
         """
@@ -106,5 +109,31 @@ class InteractionManager:
         plt.show()
 
     def get_initial_coordinates(self):
-        atom_coordinates = np.random.uniform(100, 100, (self.number_signals, 3))
+        atom_coordinates = np.random.uniform(75, 125, (self.number_signals, 3))
         return atom_coordinates
+
+    def get_atom_types(self):
+        atom_types = [None for x in self.interaction_matrix]
+        while None in atom_types:
+            for i in range(len(self.interaction_matrix)):
+                for j in range(len(self.interaction_matrix)):
+                    if self.interaction_matrix[i][j] == 1:
+                        atom_types[i] = "H"
+                        atom_types[j] = "H"
+                    elif self.interaction_matrix[i][j] == 4:
+                        atom_types[i] = "C"
+                        atom_types[j] = "C"
+                    elif self.interaction_matrix[i][j] == 2:
+                        if atom_types[i] == "C":
+                            atom_types[j] == "H"
+                        elif atom_types[j] == "C":
+                            atom_types[i] == "H"
+                        elif atom_types[i] == "H":
+                            atom_types[j] == "C"
+                        elif atom_types[j] == "H":
+                            atom_types[i] == "C"
+        return atom_types
+
+
+
+
