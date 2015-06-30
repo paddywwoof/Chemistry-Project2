@@ -4,7 +4,7 @@ import random
 import time
 import scipy.optimize as opt
 
-from interactions import InteractionManager
+from interactiomanager import InteractionManager
 from get_interactions import get_cucumber_interactions as interaction_getter
 import numpy as np
 """
@@ -38,7 +38,7 @@ def get_interaction_manager():
     return interaction_manager
 
 
-def get_response_value(atom_coordinates, interaction_manager):
+def get_response_value(atom_coordinates, interaction_manager,file_manager):
     global last_write
     """
     Calculate the response value
@@ -54,7 +54,7 @@ def get_response_value(atom_coordinates, interaction_manager):
         print("Response Value: ",response)
 
 
-        write_coordinates_to_xyz("resources/tempfile.xyz", interaction_manager, atom_coordinates)
+        file_manager.write_numpy_to_xyz("resources/tempfile.xyz", interaction_manager, atom_coordinates)
         last_write = time.time()
     return response*3
 
@@ -71,10 +71,12 @@ def magnitude(vec):
 
 
 def main():
+    from filemanager import FileManager
     start_time = time.time()
     interaction_manager = get_interaction_manager()
     interaction_manager.plot_all_interactions()
     best_atom_coordinates = interaction_manager.get_initial_coordinates()
+    file_manager = FileManager(interaction_manager)
 
     """
     for x in range(0, 50):
@@ -118,7 +120,7 @@ def main():
         try:
             minimizer_kwargz = {
                 "method": "Nelder-Mead",
-                "args": (interaction_manager,)
+                "args": (interaction_manager,file_manager)
                 }
 
             """
