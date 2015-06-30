@@ -16,11 +16,20 @@ last_write = time.time()
 
 def get_interaction_manager():
     interaction_manager = InteractionManager(get_interactions=interaction_getter, axis_width=1001)
+
+    interaction_manager.add_default_interaction(0, "Default Repulsive", repulsive_amplitude=0.8, repulsive_time_constant=5, depth=1.0)
+    interaction_manager.add_new_interaction(1, "COSY 3-Bond H-H   ", repulsive_amplitude=0.8, repulsive_time_constant=8.2, depth=1, attractive_amplitude=0.6, attractive_time_constant=200, power=3)
+    interaction_manager.add_new_interaction(2, "HSQC 1-Bond H-C   ", repulsive_amplitude=0.8, repulsive_time_constant=2.3, depth=1, attractive_amplitude=0.6, attractive_time_constant=200, power=3)
+    interaction_manager.add_new_interaction(3, "HMBC 2/3 Bond H-C ", repulsive_amplitude=0.8, repulsive_time_constant=6.5, depth=1, attractive_amplitude=0.6, attractive_time_constant=200, power=3)
+    interaction_manager.add_new_interaction(4, "INAD 1-Bond C-C   ", repulsive_amplitude=0.8, repulsive_time_constant=3.4, depth=1, attractive_amplitude=0.6, attractive_time_constant=200, power=3)
+
+    """
     interaction_manager.add_default_interaction(0, "Default Repulsive", repulsive_amplitude=0.8, repulsive_time_constant=5, depth=1.0)
     interaction_manager.add_new_interaction(1, "COSY 3-Bond H-H   ", repulsive_amplitude=0.8, repulsive_time_constant=7.2, depth=1.0, attractive_amplitude=0.6, attractive_time_constant=200, power=3)
     interaction_manager.add_new_interaction(2, "HSQC 1-Bond H-C   ", repulsive_amplitude=0.8, repulsive_time_constant=1.8, depth=1.0, attractive_amplitude=0.6, attractive_time_constant=200, power=3)
     interaction_manager.add_new_interaction(3, "HMBC 2/3 Bond H-C ", repulsive_amplitude=0.8, repulsive_time_constant=5.5, depth=1.0, attractive_amplitude=0.6, attractive_time_constant=200, power=3)
     interaction_manager.add_new_interaction(4, "INAD 1-Bond C-C   ", repulsive_amplitude=0.8, repulsive_time_constant=2.7, depth=1.0, attractive_amplitude=0.6, attractive_time_constant=200, power=3)
+    """
     """
     for x in range(1,500):
         y = round(x*0.1,3)
@@ -76,7 +85,6 @@ def main():
     interaction_manager.plot_all_interactions()
     best_atom_coordinates = interaction_manager.get_initial_coordinates()
 
-    """
     for x in range(0, 50):
         if x%10==0:
             print("Iteration: ",x)
@@ -88,25 +96,21 @@ def main():
                 if atom1.tolist() != atom2.tolist():
                     i_type = interaction_manager.interaction_matrix[atom1_index][atom2_index]
                     if i_type == 1:
-                        if magnitude(atom1 - atom2) > 28*1.25 or magnitude(atom1 - atom2) < 28*0.75:
-
-
-
-                            delta = np.array([random.uniform(1,10) for x in range(0,3)])
-                            best_atom_coordinates[atom2_index] = atom1 + delta
+                        if magnitude(atom1 - atom2) > 32*2:
+                            best_atom_coordinates[atom2_index] = atom1 + (atom2-atom1)*0.33
+                            best_atom_coordinates[atom1_index] = atom2 + (atom1-atom2)*0.33
                     if i_type == 2:
-                        if magnitude(atom1 - atom2) > 11*1.25 or magnitude(atom1 - atom2) < 11*0.75:
-                            delta = np.array([random.uniform(1,10) for x in range(0,3)])
-                            best_atom_coordinates[atom2_index] = atom1 + delta
+                        if magnitude(atom1 - atom2) > 12*2:
+                            best_atom_coordinates[atom2_index] = atom1 + (atom2-atom1)*0.33
+                            best_atom_coordinates[atom1_index] = atom2 + (atom1-atom2)*0.33
                     if i_type == 3:
-                        if magnitude(atom1 - atom2) > 23*1.25 or magnitude(atom1 - atom2) < 23*0.75:
-                            delta = np.array([random.uniform(1,10) for x in range(0,3)])
-                            best_atom_coordinates[atom2_index] = atom1 + delta
+                        if magnitude(atom1 - atom2) > 26*2:
+                            best_atom_coordinates[atom2_index] = atom1 + (atom2-atom1)*0.33
+                            best_atom_coordinates[atom1_index] = atom2 + (atom1-atom2)*0.33
                     if i_type == 4:
-                        if magnitude(atom1 - atom2) > 14*1.25 or magnitude(atom1 - atom2) < 14*0.75:
-                            delta = np.array([random.uniform(1,10) for x in range(0,3)])
-                            best_atom_coordinates[atom2_index] = atom1 + delta
-    """
+                        if magnitude(atom1 - atom2) > 16*2:
+                            best_atom_coordinates[atom2_index] = atom1 + (atom2-atom1)*0.33
+                            best_atom_coordinates[atom1_index] = atom2 + (atom1-atom2)*0.33
 
     write_coordinates_to_xyz("resources/tempfile.xyz", interaction_manager, best_atom_coordinates)
     input("")
@@ -141,7 +145,7 @@ def main():
             """
 
 
-            out_min = opt.basinhopping(get_response_value, x0=best_atom_coordinates, niter=100, minimizer_kwargs=minimizer_kwargz, T=30, stepsize=3.0)
+            out_min = opt.basinhopping(get_response_value, x0=best_atom_coordinates, niter=100, minimizer_kwargs=minimizer_kwargz, T=30, stepsize=0.5)
 
             attempt_atom_coordinates = out_min.x
             attempt_response_value = out_min.fun
