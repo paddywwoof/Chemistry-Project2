@@ -11,6 +11,9 @@ def simulated_annealing(atom_coordinates, interaction_manager, get_response_valu
 
         t /= b
 
+        for atom in atom_coordinates:
+            pass
+
         response_value = get_response_value(atom_coordinates,interaction_manager)
         index = random.randrange(0, len(atom_coordinates))
         atom = atom_coordinates[index]

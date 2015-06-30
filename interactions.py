@@ -109,7 +109,7 @@ class InteractionManager:
         plt.show()
 
     def get_initial_coordinates(self):
-        atom_coordinates = np.random.uniform(75, 125, (self.number_signals, 3))
+        atom_coordinates = np.random.uniform(99, 100, (self.number_signals, 3))
         return atom_coordinates
 
     def get_atom_types(self):
