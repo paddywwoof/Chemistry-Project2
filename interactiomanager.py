@@ -30,14 +30,43 @@ class Interaction:
         plt.title('Two Dimensional')
         print("Plotting: " + self.interaction_name)
 
+    def get_response_value(self,distance):
+        return self.distance_function[distance]
+
 
 class DefaultInteraction(Interaction):
-    def __init__(self, x_axis, repulsive_amplitude, repulsive_time_constant, depth):
+    def __init__(self, x_axis, repulsive_amplitude, repulsive_time_constant):
         self.interaction_name = "Default"
+        self.depth = 2.7
         Default = [0 for i in x_axis]
         for xi in x_axis:
-            Default[xi] = (repulsive_amplitude*depth * math.exp(-xi/repulsive_time_constant))
+            Default[xi] = (repulsive_amplitude * math.exp(-xi/repulsive_time_constant))
         self.distance_function = Default
+        self.iterations=0
+        self.delta=0.001
+        self.peaked=False
+        self.last_print = 0.1
+
+    def get_response_value(self,distance):
+        self.iterations+=1
+        self.iterations%=10000
+
+
+        if self.iterations == 0 and self.depth<3.3 and not self.peaked:
+            if abs(self.depth-self.last_print)>0.1:
+                print("Depth: ", self.depth)
+                self.last_print = self.depth
+            self.depth += \
+                self.delta
+        if self.depth>=3.3:
+            self.delta=-0.001
+            self.peaked = True
+        if self.peaked and self.depth>3:
+            self.depth+=self.delta
+
+
+
+        return self.distance_function[distance] * self.depth
 
 
 class InteractionManager:
@@ -62,11 +91,11 @@ class InteractionManager:
         self.number_signals = self.number_carbon_signals + self.number_hydrogen_signals
 
 
-    def add_default_interaction(self,index, interaction_name, repulsive_amplitude, repulsive_time_constant, depth):
+    def add_default_interaction(self,index, interaction_name, repulsive_amplitude, repulsive_time_constant):
         """
         Adds default repulsive interaction type
         """
-        new_interaction = DefaultInteraction(self.x_axis, repulsive_amplitude, repulsive_time_constant,depth)
+        new_interaction = DefaultInteraction(self.x_axis, repulsive_amplitude, repulsive_time_constant)
         self.interaction_map[index] = new_interaction
 
     def add_new_interaction(self, index, interaction_name, repulsive_amplitude, repulsive_time_constant, depth,
@@ -100,16 +129,18 @@ class InteractionManager:
 
         """
         interaction_type = self.interaction_matrix[j][i]
-        interaction_function = self.interaction_map[interaction_type]
-        return interaction_function.distance_function[distance]
+        interaction = self.interaction_map[interaction_type]
+        return interaction.get_response_value(distance)
 
     def plot_all_interactions(self):
+
         for interaction in self.interaction_map.values():
             interaction.plot_graph(self.x_axis)
+        plt.ion()
         plt.show()
 
     def get_initial_coordinates(self):
-        atom_coordinates = np.random.uniform(99, 100, (self.number_signals, 3))
+        atom_coordinates = np.random.uniform(95, 105, (self.number_signals, 3))
         return atom_coordinates
 
     def get_atom_types(self):
