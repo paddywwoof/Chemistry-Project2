@@ -3,7 +3,7 @@ __author__ = 'martin'
 import numpy as np
 
 class FileManager:
-    def __init__(self, interaction_manager, resources_folder="/resources"):
+    def __init__(self, interaction_manager, resources_folder="resources/"):
         self.resources_folder = resources_folder
         self.interaction_manager = interaction_manager
 

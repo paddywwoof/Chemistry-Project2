@@ -1,15 +1,15 @@
 __author__ = 'martin'
 import math
-import random
 import time
 import scipy.optimize as opt
-
 from interactiomanager import InteractionManager
 from get_interactions import get_cucumber_interactions as interaction_getter
-import numpy as np
-"""
-Interaction_manager parameters
-"""
+from filemanager import FileManager
+from takestep import SearchCube
+#import numpy as np
+#import random
+
+
 
 last_write = time.time()
 
@@ -47,7 +47,7 @@ def get_interaction_manager():
     return interaction_manager
 
 
-def get_response_value(atom_coordinates, interaction_manager,file_manager):
+def calculate_response_value(atom_coordinates, interaction_manager,file_manager):
     global last_write
     """
     Calculate the response value
@@ -57,18 +57,18 @@ def get_response_value(atom_coordinates, interaction_manager,file_manager):
     for i, v1 in enumerate(atom_coordinates):
         for j, v2 in enumerate(atom_coordinates):
             if j < i:
-                response += interaction_manager.interaction_response(i, j, magnitude(v2-v1))
+                response += interaction_manager.interaction_response(i, j, calculate_magnitude(v2-v1))
 
     if time.time()-last_write > 0.1:
         print("Response Value: ",response)
 
 
-        file_manager.write_numpy_to_xyz("resources/tempfile.xyz", interaction_manager, atom_coordinates)
+        file_manager.write_numpy_to_xyz("tempfile.xyz", atom_coordinates)
         last_write = time.time()
     return response*3
 
 
-def magnitude(vec):
+def calculate_magnitude(vec):
     if vec.tolist() == [0,0,0]:
         return 0
     try:
@@ -80,43 +80,43 @@ def magnitude(vec):
 
 
 def main():
-    from filemanager import FileManager
     start_time = time.time()
     interaction_manager = get_interaction_manager()
     interaction_manager.plot_all_interactions()
     best_atom_coordinates = interaction_manager.get_initial_coordinates()
     file_manager = FileManager(interaction_manager)
+    step_function  = SearchCube(0.5,0.5,0.5, calculate_response_value, interaction_manager)
 
     for x in range(0, 50):
         if x%10==0:
             print("Iteration: ",x)
             print(best_atom_coordinates)
-            write_coordinates_to_xyz("resources/tempfile.xyz", interaction_manager, best_atom_coordinates)
+            file_manager.write_numpy_to_xyz("tempfile.xyz", best_atom_coordinates)
         for atom1_index, atom1 in enumerate(best_atom_coordinates):
             for atom2_index,atom2 in enumerate(best_atom_coordinates):
 
                 if atom1.tolist() != atom2.tolist():
                     i_type = interaction_manager.interaction_matrix[atom1_index][atom2_index]
                     if i_type == 1:
-                        if magnitude(atom1 - atom2) > 32*2:
+                        if calculate_magnitude(atom1 - atom2) > 32*2:
                             best_atom_coordinates[atom2_index] = atom1 + (atom2-atom1)*0.33
                             best_atom_coordinates[atom1_index] = atom2 + (atom1-atom2)*0.33
                     if i_type == 2:
-                        if magnitude(atom1 - atom2) > 12*2:
+                        if calculate_magnitude(atom1 - atom2) > 12*2:
                             best_atom_coordinates[atom2_index] = atom1 + (atom2-atom1)*0.33
                             best_atom_coordinates[atom1_index] = atom2 + (atom1-atom2)*0.33
                     if i_type == 3:
-                        if magnitude(atom1 - atom2) > 26*2:
+                        if calculate_magnitude(atom1 - atom2) > 26*2:
                             best_atom_coordinates[atom2_index] = atom1 + (atom2-atom1)*0.33
                             best_atom_coordinates[atom1_index] = atom2 + (atom1-atom2)*0.33
                     if i_type == 4:
-                        if magnitude(atom1 - atom2) > 16*2:
+                        if calculate_magnitude(atom1 - atom2) > 16*2:
                             best_atom_coordinates[atom2_index] = atom1 + (atom2-atom1)*0.33
                             best_atom_coordinates[atom1_index] = atom2 + (atom1-atom2)*0.33
 
-    write_coordinates_to_xyz("resources/tempfile.xyz", interaction_manager, best_atom_coordinates)
+    file_manager.write_numpy_to_xyz("tempfile.xyz", best_atom_coordinates)
     input("")
-    best_response_value = get_response_value(best_atom_coordinates, interaction_manager)
+    best_response_value = calculate_response_value(best_atom_coordinates, interaction_manager,file_manager)
 
     number_attempts = 5  # Hardcoded
 
@@ -147,7 +147,7 @@ def main():
             """
 
 
-            out_min = opt.basinhopping(get_response_value, x0=best_atom_coordinates, niter=100, minimizer_kwargs=minimizer_kwargz, T=30, stepsize=0.5)
+            out_min = opt.basinhopping(calculate_response_value, x0=best_atom_coordinates, niter=100, minimizer_kwargs=minimizer_kwargz, T=30, stepsize=0.5, take_step=step_function)
 
             attempt_atom_coordinates = out_min.x
             attempt_response_value = out_min.fun
@@ -161,24 +161,11 @@ def main():
 
 
     best_atom_coordinates = best_atom_coordinates.reshape((interaction_manager.number_signals, 3))
-    write_coordinates_to_xyz("resources/tempfile.xyz", interaction_manager, best_atom_coordinates)
-    write_coordinates_to_xyz("resources/solution.xyz", interaction_manager, best_atom_coordinates)
+    file_manager.write_coordinates_to_xyz("tempfile.xyz", best_atom_coordinates)
+    file_manager.write_coordinates_to_xyz("solution.xyz", best_atom_coordinates)
     running_time = time.time()-start_time
     print("Running time: ", running_time, "s")
     return best_response_value, best_atom_coordinates
-
-
-def write_coordinates_to_xyz(filename, interaction_manager, best_atom_coordinates):
-    print("Writing to: "+filename)
-
-    signal_info = interaction_manager.atom_types
-
-    file = open(filename, "w")
-    file.write(str(interaction_manager.number_signals)+"\n")
-    file.write("Optimised cartesian coordinates\n")
-    for i in range(interaction_manager.number_signals):
-        file.write(signal_info[i]+" "+str(best_atom_coordinates[i][0]/10)+" "+str(best_atom_coordinates[i][1]/10)+" "+str(best_atom_coordinates[i][2]/10)+"\n")
-    file.close()
 
 
 if __name__ == "__main__":
