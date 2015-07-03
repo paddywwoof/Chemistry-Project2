@@ -1,7 +1,7 @@
 __author__ = 'martin'
 import numpy as np
 import math
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as pyplot
 
 
 class Interaction:
@@ -19,15 +19,15 @@ class Interaction:
         for xi in x_axis:
             distance_function[xi] = ((-aad * math.exp(-xi/atc)) + aad + (rad * math.exp(-xi/rtc)) - rad)**power
             if distance_function[xi]>distance_function[xi-1] and distance_function[xi-1] < distance_function[xi-2]:
-                print(self.interaction_name+", Minima at: ", xi)
+                print(self.interaction_name+", Minimum at: ", xi-1)
         self.distance_function = distance_function
 
     def plot_graph(self, x_axis):
         number_points = 400
-        plt.plot(x_axis[:number_points], self.distance_function[:number_points])
-        plt.xlabel('$x$')
-        plt.ylabel('$y$')
-        plt.title('Two Dimensional')
+        pyplot.plot(x_axis[:number_points], self.distance_function[:number_points])
+        pyplot.xlabel('$x$')
+        pyplot.ylabel('$y$')
+        pyplot.title('Two Dimensional')
         print("Plotting: " + self.interaction_name)
 
     def get_response_value(self,distance):
@@ -37,34 +37,12 @@ class Interaction:
 class DefaultInteraction(Interaction):
     def __init__(self, x_axis, repulsive_amplitude, repulsive_time_constant):
         self.interaction_name = "Default"
-        self.depth = 2.7
-        Default = [0 for i in x_axis]
+        self.depth = 3.0
+        self.distance_function = [0 for i in x_axis]
         for xi in x_axis:
-            Default[xi] = (repulsive_amplitude * math.exp(-xi/repulsive_time_constant))
-        self.distance_function = Default
-        self.iterations=0
-        self.delta=0.001
-        self.peaked=False
-        self.last_print = 0.1
+            self.distance_function[xi] = (repulsive_amplitude * math.exp(-xi/repulsive_time_constant))
 
-    def get_response_value(self,distance):
-        self.iterations+=1
-        self.iterations%=10000
-
-
-        if self.iterations == 0 and self.depth<3.3 and not self.peaked:
-            if abs(self.depth-self.last_print)>0.1:
-                print("Depth: ", self.depth)
-                self.last_print = self.depth
-            self.depth += \
-                self.delta
-        if self.depth>=3.3:
-            self.delta=-0.001
-            self.peaked = True
-        if self.peaked and self.depth>3:
-            self.depth+=self.delta
-
-
+    def get_response_value(self, distance):
 
         return self.distance_function[distance] * self.depth
 
@@ -73,7 +51,7 @@ class InteractionManager:
     """
     Managers the different types of interaction (e.g. HSQC, COSY etc, and their response values)
     """
-    def __init__(self, get_interactions, axis_width):
+    def __init__(self, axis_width, interaction_filename):
         """
         Args:
             axis_width: Number of points to generate function mapping for
@@ -84,12 +62,11 @@ class InteractionManager:
 
         self.x_axis = range(axis_width)
         self.interaction_map = {}
-        self.interaction_matrix = get_interactions()
+        self.interaction_matrix = self.get_interaction_matrix(interaction_filename)
         self.atom_types = self.get_atom_types()
         self.number_carbon_signals = self.atom_types.count("C")
-        self.number_hydrogen_signals= self.atom_types.count("H")
+        self.number_hydrogen_signals = self.atom_types.count("H")
         self.number_signals = self.number_carbon_signals + self.number_hydrogen_signals
-
 
     def add_default_interaction(self,index, interaction_name, repulsive_amplitude, repulsive_time_constant):
         """
@@ -136,11 +113,11 @@ class InteractionManager:
 
         for interaction in self.interaction_map.values():
             interaction.plot_graph(self.x_axis)
-        plt.ion()
-        plt.show()
+        pyplot.ion()
+        pyplot.show()
 
     def get_initial_coordinates(self):
-        atom_coordinates = np.random.uniform(95, 105, (self.number_signals, 3))
+        atom_coordinates = np.random.uniform(99, 101, (self.number_signals, 3))
         return atom_coordinates
 
     def get_atom_types(self):
@@ -165,6 +142,14 @@ class InteractionManager:
                             atom_types[i] == "C"
         return atom_types
 
-
+    def get_interaction_matrix(self, name):
+        array_file = open("resources/"+name)
+        array_string = array_file.read()
+        array_string = array_string.replace(" ", ", ")
+        array_file.close()
+        interaction_matrix = eval(array_string)
+        interaction_matrix = np.array(interaction_matrix)
+        interaction_matrix = interaction_matrix.transpose()
+        return interaction_matrix
 
 
