@@ -164,10 +164,6 @@ class InteractionManager:
             interaction_matrix.append(eval(atom[1].replace(" ", ",")))
             shift_values.append(float(atom[2]))
         interaction_matrix = np.array(interaction_matrix)
-        print(str(interaction_matrix))
-        print(atom_types)
-        print(shift_values)
-        input("")
         return interaction_matrix, atom_types, shift_values
 
 
