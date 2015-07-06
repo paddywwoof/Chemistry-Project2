@@ -18,13 +18,18 @@ class StructureMinimiser:
 
         self.date = self.get_now()
 
+    def reset(self):
+        self.atom_coordinates = self.interaction_manager.get_initial_coordinates()
+        self.response_value = 0
+
     def main(self):
         try:
             os.mkdir("resources/"+self.date)
         except FileExistsError:
             pass
         for run in range(1, 11):
-            print("Starting Run: ", run)
+            self.reset()
+            print("Starfting Run: ", run)
             new_dir = "resources/"+self.date+"/Run"+str(run)+"/"
             try:
                 os.mkdir(new_dir)
