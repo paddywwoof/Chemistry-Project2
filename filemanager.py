@@ -47,10 +47,6 @@ class FileManager:
         return time.time()-self.start_time
 
 
-
-
-
-
 import main
 if __name__ == "__main__":
     structure_solver = main.StructureMinimiser()

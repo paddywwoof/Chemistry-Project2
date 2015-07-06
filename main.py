@@ -20,6 +20,7 @@ class StructureMinimiser:
         self.date = self.get_now()
 
 
+
     def reset(self):
         self.atom_coordinates = self.interaction_manager.get_initial_coordinates()
         self.response_value = 0
@@ -30,7 +31,7 @@ class StructureMinimiser:
             os.mkdir("resources/"+self.date)
         except FileExistsError:
             pass
-        for run in range(1, 11):
+        for run in range(1, 2):
             self.reset()
             print("Starfting Run: ", run)
             new_dir = "resources/"+self.date+"/Run"+str(run)+"/"
@@ -49,7 +50,7 @@ class StructureMinimiser:
             self.file_manager.convert_xyz_to_mol(directory+"solution%s.xyz" % x)
 
     def minimise_response(self):
-        minimisation_solution = basinhopping(self.calculate_response_value, x0=self.atom_coordinates, niter=50, minimizer_kwargs={"method": "Nelder-Mead"}, T=30, stepsize=0.5)
+        minimisation_solution = basinhopping(self.calculate_response_value, x0=self.atom_coordinates, niter=75, minimizer_kwargs={"method": "Nelder-Mead"}, T=30, stepsize=1.0)
         self.response_value = minimisation_solution.fun
         self.atom_coordinates = self.interaction_manager.shape_coordinates(minimisation_solution.x)
 
@@ -69,21 +70,15 @@ class StructureMinimiser:
         for i, v1 in enumerate(atom_coordinates):
             for j, v2 in enumerate(atom_coordinates):
                 if j < i:
-                    response += self.interaction_manager.interaction_response(i, j, self.calculate_magnitude(v2 - v1))
+                    response += self.interaction_manager.interaction_response(i, j, self.calculate_magnitude(v2, v1))
 
-        if self.file_manager.time_since_last_write() > 0.5 and write_out:
+        if self.file_manager.time_since_last_write() > 2 and write_out:
             print("Response Value: ", response, " Iterations: ",self.iterations)
             self.file_manager.write_numpy_to_xyz("resources/tempfile.xyz", atom_coordinates, self.interaction_manager.atom_types)
         return response
 
-    def calculate_magnitude(self, vec):
-        if vec.tolist() == [0, 0, 0]:
-            return 0
-        try:
-            distance = sqrt(vec[0] ** 2 + vec[1] ** 2 + vec[2] ** 2)
-        except Exception as e:
-            print("Vector:" + str(vec))
-            raise e
+    def calculate_magnitude(self, v1,v2):
+        distance = sqrt( (v1[0]-v2[0]) ** 2 + (v1[1]-v2[1]) ** 2 + (v1[2]-v2[2]) ** 2)
         return round(distance)
 
     def get_now(self):
@@ -92,9 +87,14 @@ class StructureMinimiser:
         date = date.replace(":", "-")
         return date
 
-
-if __name__ == "__main__":
+def main():
     try:
         response_value, coordinates = StructureMinimiser().main()
     except KeyboardInterrupt:
         print("\n \n \n Program Terminated By User")
+
+
+if __name__ == "__main__":
+    import cProfile
+    cProfile.run('main()')
+    #main()
