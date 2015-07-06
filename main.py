@@ -15,12 +15,15 @@ class StructureMinimiser:
 
         self.atom_coordinates = self.interaction_manager.get_initial_coordinates()
         self.response_value = 0
+        self.iterations=0
 
         self.date = self.get_now()
+
 
     def reset(self):
         self.atom_coordinates = self.interaction_manager.get_initial_coordinates()
         self.response_value = 0
+        self.iterations=0
 
     def main(self):
         try:
@@ -60,7 +63,7 @@ class StructureMinimiser:
         return interaction_manager
 
     def calculate_response_value(self, atom_coordinates, write_out=True):
-
+        self.iterations+=1
         atom_coordinates = atom_coordinates.reshape((self.interaction_manager.number_signals, 3))
         response = 0
         for i, v1 in enumerate(atom_coordinates):
@@ -69,7 +72,7 @@ class StructureMinimiser:
                     response += self.interaction_manager.interaction_response(i, j, self.calculate_magnitude(v2 - v1))
 
         if self.file_manager.time_since_last_write() > 0.5 and write_out:
-            print("Response Value: ", response)
+            print("Response Value: ", response, " Iterations: ",self.iterations)
             self.file_manager.write_numpy_to_xyz("resources/tempfile.xyz", atom_coordinates, self.interaction_manager.atom_types)
         return response
 
