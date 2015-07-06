@@ -2,33 +2,31 @@ __author__ = 'martin'
 
 import numpy as np
 import time
+import os
 
 class FileManager:
-    def __init__(self, interaction_manager, resources_folder="resources/"):
-        self.resources_folder = resources_folder
-        self.interaction_manager = interaction_manager
+    def __init__(self):
         self.last_write = time.time()
         self.start_time = time.time()
 
-    def write_numpy_to_xyz(self, filename, best_atom_coordinates):
+    def write_numpy_to_xyz(self, filename, atom_coordinates, atom_types):
         self.last_write = time.time()
-        print("Writing to: "+self.resources_folder+filename)
-        file = open(self.resources_folder+filename, "w")
-        xyz_string = self.numpy_to_xyz_string(filename,best_atom_coordinates)
+        print("Writing to: "+filename)
+        file = open(filename, "w")
+        xyz_string = self.numpy_to_xyz_string(filename,atom_coordinates, atom_types)
         file.write(xyz_string)
         file.close()
 
-    def numpy_to_xyz_string(self, filename, best_atom_coordinates):
-        signal_info = self.interaction_manager.atom_types
-        xyz_string = ""
-        xyz_string += (str(self.interaction_manager.number_signals)+"\n")
-        xyz_string += ("Optimised cartesian coordinates\n")
-        for i in range(self.interaction_manager.number_signals):
-            xyz_string += (signal_info[i]+" "+str(best_atom_coordinates[i][0]/10)+" "+str(best_atom_coordinates[i][1]/10)+" "+str(best_atom_coordinates[i][2]/10)+"\n")
+    def numpy_to_xyz_string(self, filename, atom_coordinates, atom_types):
+        signal_info = atom_types
+        xyz_string = str(len(atom_coordinates))+"\n"
+        xyz_string += "Energy Minimised Cartesian Coordinates\n"
+        for i,atom in enumerate(atom_coordinates):
+            xyz_string += (signal_info[i]+" "+str(atom_coordinates[i][0]/10)+" "+str(atom_coordinates[i][1]/10)+" "+str(atom_coordinates[i][2]/10)+"\n")
         return xyz_string
 
-    def read_xyz_to_numpy(self,filename):
-        xyzfile = open(self.resources_folder+filename, "r")
+    def read_numpy_from_xyz(self, filename):
+        xyzfile = open(filename, "r")
         xyz_data = xyzfile.readlines()
         xyzfile.close()
         xyz_data = xyz_data[2:]
@@ -38,6 +36,10 @@ class FileManager:
         xyz_data = [eval(line) for line in xyz_data]
         return np.array(xyz_data)
 
+    def convert_xyz_to_mol(self, file_in):
+        file_out = file_in[:-3]+"mol"
+        os.system("obabel %s -O %s"%(file_in, file_out))
+
     def time_since_last_write(self):
         return time.time()-self.last_write
 
@@ -45,9 +47,13 @@ class FileManager:
         return time.time()-self.start_time
 
 
+
+
+
+
 import main
-structure_solver = main.StructureMinimiser()
-interaction_manager = structure_solver.get_interaction_manager()
-file_manager = FileManager(interaction_manager)
-a = file_manager.read_xyz_to_numpy('Run2/solution1.xyz')
-print(a)
+if __name__ == "__main__":
+    structure_solver = main.StructureMinimiser()
+    interaction_manager = structure_solver.get_interaction_manager()
+    file_manager = FileManager(interaction_manager)
+    a = file_manager.read_numpy_from_xyz('Run2/solution1.xyz')

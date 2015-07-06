@@ -62,8 +62,7 @@ class InteractionManager:
 
         self.x_axis = range(axis_width)
         self.interaction_map = {}
-        self.interaction_matrix = self.get_interaction_matrix(interaction_filename)
-        self.atom_types = self.get_atom_types()
+        self.interaction_matrix, self.atom_types, self.shift_data = self.load_interaction_data(interaction_filename)
         self.number_carbon_signals = self.atom_types.count("C")
         self.number_hydrogen_signals = self.atom_types.count("H")
         self.number_signals = self.number_carbon_signals + self.number_hydrogen_signals
@@ -109,17 +108,24 @@ class InteractionManager:
         interaction = self.interaction_map[interaction_type]
         return interaction.get_response_value(distance)
 
+    def shape_coordinates(self,atom_coordinates):
+        """
+        When array is improperly shaped, reshapes the array
+        """
+        return atom_coordinates.reshape((self.number_signals, 3))
+
     def plot_all_interactions(self):
 
         for interaction in self.interaction_map.values():
             interaction.plot_graph(self.x_axis)
-        pyplot.ion()
+        #pyplot.ion()
         pyplot.show()
 
     def get_initial_coordinates(self):
         atom_coordinates = np.random.uniform(99, 101, (self.number_signals, 3))
         return atom_coordinates
 
+    """
     def get_atom_types(self):
         atom_types = [None for x in self.interaction_matrix]
         while None in atom_types:
@@ -141,15 +147,27 @@ class InteractionManager:
                         elif atom_types[j] == "H":
                             atom_types[i] == "C"
         return atom_types
+    """
 
-    def get_interaction_matrix(self, name):
-        array_file = open("resources/"+name)
-        array_string = array_file.read()
-        array_string = array_string.replace(" ", ", ")
-        array_file.close()
-        interaction_matrix = eval(array_string)
+    def load_interaction_data(self, filename):
+
+        interactions_file = open("resources/"+filename)
+        interaction_string = interactions_file.read()
+        interactions_file.close()
+        interaction_list = [line.split(":") for line in interaction_string.splitlines()]
+
+        interaction_matrix = []
+        atom_types = []
+        shift_values = []
+        for atom in interaction_list:
+            atom_types.append(atom[0])
+            interaction_matrix.append(eval(atom[1].replace(" ", ",")))
+            shift_values.append(float(atom[2]))
         interaction_matrix = np.array(interaction_matrix)
-        interaction_matrix = interaction_matrix.transpose()
-        return interaction_matrix
+        print(str(interaction_matrix))
+        print(atom_types)
+        print(shift_values)
+        input("")
+        return interaction_matrix, atom_types, shift_values
 
 

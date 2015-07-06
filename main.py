@@ -3,43 +3,50 @@ from math import sqrt
 from scipy.optimize import basinhopping
 from interactionmanager import InteractionManager
 from filemanager import FileManager
-
+import os
+import datetime
 
 class StructureMinimiser:
     def __init__(self):
         self.interaction_manager = self.get_interaction_manager()
         self.interaction_manager.plot_all_interactions()
 
-        self.file_manager = FileManager(self.interaction_manager)
+        self.file_manager = FileManager()
 
         self.atom_coordinates = self.interaction_manager.get_initial_coordinates()
         self.response_value = 0
 
+        self.date = self.get_now()
+
     def main(self):
-        import os
-        for run in range(3,10):
+        try:
+            os.mkdir("resources/"+self.date)
+        except FileExistsError:
+            pass
+        for run in range(1, 11):
             print("Starting Run: ", run)
-            new_dir = "Run"+str(run)
+            new_dir = "resources/"+self.date+"/Run"+str(run)+"/"
             try:
-                os.mkdir("resources/"+new_dir)
+                os.mkdir(new_dir)
             except FileExistsError:
                 pass
             self.minimise_response()
-            self.write_solution(new_dir+"/")
+            self.write_solution(new_dir)
             print("Running time: ", self.file_manager.get_running_time(), "s")
         return self.response_value, self.atom_coordinates
 
     def write_solution(self, directory=""):
         for x in [1.15, 1.1, 1.05, 1, 0.95, 0.85, 0.80]:
-            self.file_manager.write_numpy_to_xyz(directory+"solution%s.xyz" % x, self.atom_coordinates * x)
+            self.file_manager.write_numpy_to_xyz(directory+"solution%s.xyz" % x, self.atom_coordinates * x, self.interaction_manager.atom_types)
+            self.file_manager.convert_xyz_to_mol(directory+"solution%s.xyz" % x)
 
     def minimise_response(self):
         minimisation_solution = basinhopping(self.calculate_response_value, x0=self.atom_coordinates, niter=50, minimizer_kwargs={"method": "Nelder-Mead"}, T=30, stepsize=0.5)
         self.response_value = minimisation_solution.fun
-        self.atom_coordinates = minimisation_solution.x.reshape((self.interaction_manager.number_signals, 3))
+        self.atom_coordinates = self.interaction_manager.shape_coordinates(minimisation_solution.x)
 
     def get_interaction_manager(self):
-        interaction_manager = InteractionManager(axis_width=1001, interaction_filename="interaction_cache/cucumber.np")
+        interaction_manager = InteractionManager(axis_width=1001, interaction_filename="interactions/cucumber.np")
         interaction_manager.add_default_interaction(0, "Default Repulsive", repulsive_amplitude=0.8, repulsive_time_constant=5)
         interaction_manager.add_new_interaction(index=1, interaction_name="COSY 3-Bond H-H   ", repulsive_amplitude=0.8, repulsive_time_constant=8.2, depth=3, attractive_amplitude=0.6, attractive_time_constant=200, power=3)
         interaction_manager.add_new_interaction(index=2, interaction_name="HSQC 1-Bond H-C   ", repulsive_amplitude=0.8, repulsive_time_constant=2.3, depth=3, attractive_amplitude=0.6, attractive_time_constant=200, power=3)
@@ -58,7 +65,7 @@ class StructureMinimiser:
 
         if self.file_manager.time_since_last_write() > 0.5 and write_out:
             print("Response Value: ", response)
-            self.file_manager.write_numpy_to_xyz("tempfile.xyz", atom_coordinates)
+            self.file_manager.write_numpy_to_xyz("resources/tempfile.xyz", atom_coordinates, self.interaction_manager.atom_types)
         return response
 
     def calculate_magnitude(self, vec):
@@ -69,7 +76,13 @@ class StructureMinimiser:
         except Exception as e:
             print("Vector:" + str(vec))
             raise e
-        return round(distance)
+        return int(round(distance))
+
+    def get_now(self):
+        date = str(datetime.datetime.now())[:-7]
+        date = date.replace(" ", "~")
+        date = date.replace(":", "-")
+        return date
 
 
 if __name__ == "__main__":
