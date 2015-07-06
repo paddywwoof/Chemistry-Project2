@@ -84,7 +84,7 @@ class StructureMinimiser:
         except Exception as e:
             print("Vector:" + str(vec))
             raise e
-        return int(round(distance))
+        return round(distance)
 
     def get_now(self):
         date = str(datetime.datetime.now())[:-7]
