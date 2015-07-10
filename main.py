@@ -1,10 +1,11 @@
 __author__ = 'martin'
 from math import sqrt
 from scipy.optimize import basinhopping
-from interactionmanager import InteractionManager
-from filemanager import FileManager
+from .interactionmanager import InteractionManager
+from .filemanager import FileManager
 import os
 import datetime
+
 
 class StructureMinimiser:
     def __init__(self):
@@ -15,11 +16,9 @@ class StructureMinimiser:
 
         self.atom_coordinates = self.interaction_manager.get_initial_coordinates()
         self.response_value = 0
-        self.iterations=0
+        self.iterations = 0
 
         self.date = self.get_now()
-
-
 
     def reset(self):
         self.atom_coordinates = self.interaction_manager.get_initial_coordinates()
@@ -28,13 +27,13 @@ class StructureMinimiser:
 
     def main(self):
         try:
-            os.mkdir("resources/"+self.date)
+            os.mkdir("output/"+self.date)
         except FileExistsError:
             pass
         for run in range(1, 2):
             self.reset()
             print("Starfting Run: ", run)
-            new_dir = "resources/"+self.date+"/Run"+str(run)+"/"
+            new_dir = "output/"+self.date+"/Run"+str(run)+"/"
             try:
                 os.mkdir(new_dir)
             except FileExistsError:
@@ -55,7 +54,7 @@ class StructureMinimiser:
         self.atom_coordinates = self.interaction_manager.shape_coordinates(minimisation_solution.x)
 
     def get_interaction_manager(self):
-        interaction_manager = InteractionManager(axis_width=1001, interaction_filename="interactions/cucumber.np")
+        interaction_manager = InteractionManager(axis_width=1001, interaction_filename="interactions/hexenal.np")
         interaction_manager.add_default_interaction(0, "Default Repulsive", repulsive_amplitude=0.8, repulsive_time_constant=5)
         interaction_manager.add_new_interaction(index=1, interaction_name="COSY 3-Bond H-H   ", repulsive_amplitude=0.8, repulsive_time_constant=8.2, depth=3, attractive_amplitude=0.6, attractive_time_constant=200, power=3)
         interaction_manager.add_new_interaction(index=2, interaction_name="HSQC 1-Bond H-C   ", repulsive_amplitude=0.8, repulsive_time_constant=2.3, depth=3, attractive_amplitude=0.6, attractive_time_constant=200, power=3)
@@ -72,9 +71,9 @@ class StructureMinimiser:
                 if j < i:
                     response += self.interaction_manager.interaction_response(i, j, self.calculate_magnitude(v2, v1))
 
-        if self.file_manager.time_since_last_write() > 2 and write_out:
+        if self.file_manager.time_since_last_write() > 0.5 and write_out:
             print("Response Value: ", response, " Iterations: ",self.iterations)
-            self.file_manager.write_numpy_to_xyz("resources/tempfile.xyz", atom_coordinates, self.interaction_manager.atom_types)
+            self.file_manager.write_numpy_to_xyz("output/tempfile.xyz", atom_coordinates, self.interaction_manager.atom_types)
         return response
 
     def calculate_magnitude(self, v1,v2):
@@ -96,5 +95,5 @@ def main():
 
 if __name__ == "__main__":
     import cProfile
-    cProfile.run('main()')
-    #main()
+    #cProfile.run('main()')
+    main()
