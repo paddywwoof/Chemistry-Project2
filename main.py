@@ -1,10 +1,11 @@
 __author__ = 'martin'
 from math import sqrt
 from scipy.optimize import basinhopping
-from .interactionmanager import InteractionManager
-from .filemanager import FileManager
+from interactionmanager import InteractionManager
+from filemanager import FileManager
 import os
 import datetime
+import numpy as np
 
 
 class StructureMinimiser:
@@ -16,8 +17,10 @@ class StructureMinimiser:
 
         self.atom_coordinates = self.interaction_manager.get_initial_coordinates()
         self.response_value = 0
-        self.iterations = 0
+        self.best_coordinates = None
+        self.best_response_value = 0
 
+        self.iterations = 0
         self.date = self.get_now()
 
     def reset(self):
@@ -30,7 +33,7 @@ class StructureMinimiser:
             os.mkdir("output/"+self.date)
         except FileExistsError:
             pass
-        for run in range(1, 2):
+        for run in range(1, 11):
             self.reset()
             print("Starfting Run: ", run)
             new_dir = "output/"+self.date+"/Run"+str(run)+"/"
@@ -49,12 +52,13 @@ class StructureMinimiser:
             self.file_manager.convert_xyz_to_mol(directory+"solution%s.xyz" % x)
 
     def minimise_response(self):
-        minimisation_solution = basinhopping(self.calculate_response_value, x0=self.atom_coordinates, niter=75, minimizer_kwargs={"method": "Nelder-Mead"}, T=30, stepsize=1.0)
+        minimisation_solution = basinhopping(self.calculate_response_value, x0=self.atom_coordinates, niter=75, minimizer_kwargs={"method": "Nelder-Mead"}, T=30, stepsize=3)
         self.response_value = minimisation_solution.fun
         self.atom_coordinates = self.interaction_manager.shape_coordinates(minimisation_solution.x)
+        print(self.atom_coordinates == self.best_coordinates)
 
     def get_interaction_manager(self):
-        interaction_manager = InteractionManager(axis_width=1001, interaction_filename="interactions/hexenal.np")
+        interaction_manager = InteractionManager(axis_width=1001, interaction_filename="interactions/cucumber.np")
         interaction_manager.add_default_interaction(0, "Default Repulsive", repulsive_amplitude=0.8, repulsive_time_constant=5)
         interaction_manager.add_new_interaction(index=1, interaction_name="COSY 3-Bond H-H   ", repulsive_amplitude=0.8, repulsive_time_constant=8.2, depth=3, attractive_amplitude=0.6, attractive_time_constant=200, power=3)
         interaction_manager.add_new_interaction(index=2, interaction_name="HSQC 1-Bond H-C   ", repulsive_amplitude=0.8, repulsive_time_constant=2.3, depth=3, attractive_amplitude=0.6, attractive_time_constant=200, power=3)
@@ -70,6 +74,10 @@ class StructureMinimiser:
             for j, v2 in enumerate(atom_coordinates):
                 if j < i:
                     response += self.interaction_manager.interaction_response(i, j, self.calculate_magnitude(v2, v1))
+
+        if response < self.best_response_value:
+            self.best_response_value = response
+            self.best_coordinates = np.copy(atom_coordinates)
 
         if self.file_manager.time_since_last_write() > 0.5 and write_out:
             print("Response Value: ", response, " Iterations: ",self.iterations)
