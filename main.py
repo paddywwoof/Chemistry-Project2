@@ -26,7 +26,7 @@ class StructureMinimiser:
     def reset(self):
         self.atom_coordinates = self.interaction_manager.get_initial_coordinates()
         self.response_value = 0
-        self.iterations=0
+        self.iterations = 0
 
     def main(self):
         try:
@@ -52,13 +52,13 @@ class StructureMinimiser:
             self.file_manager.convert_xyz_to_mol(directory+"solution%s.xyz" % x)
 
     def minimise_response(self):
-        minimisation_solution = basinhopping(self.calculate_response_value, x0=self.atom_coordinates, niter=75, minimizer_kwargs={"method": "Nelder-Mead"}, T=30, stepsize=3)
+        minimisation_solution = basinhopping(self.calculate_response_value, x0=self.atom_coordinates, niter=1000, minimizer_kwargs={"method": "Nelder-Mead"}, T=30, stepsize=5)
         self.response_value = minimisation_solution.fun
         self.atom_coordinates = self.interaction_manager.shape_coordinates(minimisation_solution.x)
         print(self.atom_coordinates == self.best_coordinates)
 
     def get_interaction_manager(self):
-        interaction_manager = InteractionManager(axis_width=1001, interaction_filename="interactions/cucumber.np")
+        interaction_manager = InteractionManager(axis_width=1001)
         interaction_manager.add_default_interaction(0, "Default Repulsive", repulsive_amplitude=0.8, repulsive_time_constant=5)
         interaction_manager.add_new_interaction(index=1, interaction_name="COSY 3-Bond H-H   ", repulsive_amplitude=0.8, repulsive_time_constant=8.2, depth=3, attractive_amplitude=0.6, attractive_time_constant=200, power=3)
         interaction_manager.add_new_interaction(index=2, interaction_name="HSQC 1-Bond H-C   ", repulsive_amplitude=0.8, repulsive_time_constant=2.3, depth=3, attractive_amplitude=0.6, attractive_time_constant=200, power=3)

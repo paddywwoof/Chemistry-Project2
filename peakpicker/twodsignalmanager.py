@@ -146,10 +146,16 @@ class TwoDSignal:
         return [x for x in cartesian(*[self.x_signal_numbers, self.y_signal_numbers])]
 
 
-def get_interaction_matrix():
+def get_interaction_data():
     oned_signal_manager = OneDSignalManager()
     oned_signal_manager.add_nmr_signals('resources/oned/hydrogen_integration_data.txt', "H")
     oned_signal_manager.add_nmr_signals('resources/oned/carbon_integration_data.txt', "C")
+
+    atom_types = []
+    shift_values = []
+    for signal in oned_signal_manager.signals:
+        atom_types.append(signal.signal_type)
+        shift_values.append(signal.x_shift)
 
     twod_signal_manager = TwoDSignalManager(oned_signal_manager)
     twod_signal_manager.add_nmr_signals("COSY", 'resources/twod/cosy/cosy_peak_data.txt')
@@ -157,8 +163,8 @@ def get_interaction_matrix():
     twod_signal_manager.add_nmr_signals("HMBC", 'resources/twod/hmbc/hmbc_peak_data.txt')
 
     interaction_matrix = twod_signal_manager.get_interaction_matrix()
-    return interaction_matrix
+    return interaction_matrix, atom_types, shift_values
 
 if __name__ == "__main__":
-    imatrix = get_interaction_matrix()
+    imatrix = get_interaction_data()
     print(imatrix)

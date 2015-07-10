@@ -2,7 +2,6 @@ __author__ = 'martin'
 import numpy as np
 import math
 import matplotlib.pyplot as pyplot
-import peakpicker
 
 
 class Interaction:
@@ -52,7 +51,7 @@ class InteractionManager:
     """
     Managers the different types of interaction (e.g. HSQC, COSY etc, and their response values)
     """
-    def __init__(self, axis_width):
+    def __init__(self, axis_width, interaction_filename):
         """
         Args:
             axis_width: Number of points to generate function mapping for
@@ -63,7 +62,7 @@ class InteractionManager:
 
         self.x_axis = range(axis_width)
         self.interaction_map = {}
-        self.interaction_matrix, self.atom_types, self.shift_data = peakpicker.get_interaction_data()
+        self.interaction_matrix, self.atom_types, self.shift_data = self.load_interaction_data(interaction_filename)
         self.number_carbon_signals = self.atom_types.count("C")
         self.number_hydrogen_signals = self.atom_types.count("H")
         self.number_signals = self.number_carbon_signals + self.number_hydrogen_signals
@@ -149,7 +148,6 @@ class InteractionManager:
                             atom_types[i] == "C"
         return atom_types
     """
-    """
 
     def load_interaction_data(self, filename):
 
@@ -167,6 +165,5 @@ class InteractionManager:
             shift_values.append(float(atom[2]))
         interaction_matrix = np.array(interaction_matrix)
         return interaction_matrix, atom_types, shift_values
-    """
 
 

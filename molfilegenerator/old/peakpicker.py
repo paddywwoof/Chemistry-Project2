@@ -1,8 +1,7 @@
+import numpy as np
 import matplotlib.pyplot as plt
 
-import numpy as np
-
-from utils import round_to_nearest, merge_duplicates, remove_asymmetric
+from old.utils import round_to_nearest, merge_duplicates, remove_asymmetric
 
 
 class PeakManager:
@@ -115,6 +114,6 @@ def plot_graphs(peaks):
     plt.show()
 
 if __name__ == "__main__":
-    PeakManager('resources/cosy_peak_data.txt').main()
+    PeakManager('cosy peaks indanone.txt').main()
 
 
