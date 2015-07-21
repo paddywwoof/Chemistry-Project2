@@ -36,15 +36,15 @@ class Interaction:
         return self.distance_function[distance]
 
 class DefaultInteraction(Interaction):
-    def __init__(self, x_axis, repulsive_amplitude, repulsive_time_constant):
+    def __init__(self, x_axis, repulsive_amplitude, repulsive_time_constant, depth):
         self.interaction_name = "Default"
-        self.depth = 3.0
+        self.depth = depth
         self.distance_function = [0 for i in x_axis]
         for xi in x_axis:
-            self.distance_function[xi] = (repulsive_amplitude * math.exp(-xi/repulsive_time_constant))
+            self.distance_function[xi] = self.depth * (repulsive_amplitude * math.exp(-xi/repulsive_time_constant))
 
     def get_response_value(self, distance):
-        return self.distance_function[distance] * self.depth
+        return self.distance_function[distance]
 
 class InteractionManager:
     """
@@ -68,11 +68,11 @@ class InteractionManager:
         self.number_signals = self.number_carbon_signals + self.number_hydrogen_signals
         self.bonds = self.get_bonds()
 
-    def add_default_interaction(self,index, interaction_name, repulsive_amplitude, repulsive_time_constant):
+    def add_default_interaction(self,index, interaction_name, repulsive_amplitude, repulsive_time_constant, depth):
         """
         Adds default repulsive interaction type
         """
-        new_interaction = DefaultInteraction(self.x_axis, repulsive_amplitude, repulsive_time_constant)
+        new_interaction = DefaultInteraction(self.x_axis, repulsive_amplitude, repulsive_time_constant, depth)
         self.interaction_map[index] = new_interaction
 
     def add_new_interaction(self, index, interaction_name, repulsive_amplitude, repulsive_time_constant, depth,
@@ -97,7 +97,8 @@ class InteractionManager:
 
     def calculate_magnitude(self, v1,v2):
         distance = sqrt( (v1[0]-v2[0]) ** 2 + (v1[1]-v2[1]) ** 2 + (v1[2]-v2[2]) ** 2)
-        return round(distance)
+
+        return min(1000,round(distance))
 
     def interaction_response(self, i, j, v1, v2):
         """
@@ -109,10 +110,15 @@ class InteractionManager:
         Returns:
             interaction response
         """
-        distance = self.calculate_magnitude(v1, v2)
-        interaction_type = self.interaction_matrix[j][i]
-        interaction = self.interaction_map[interaction_type]
-        return interaction.get_response_value(distance)
+        try:
+            distance = self.calculate_magnitude(v1, v2)
+            interaction_type = self.interaction_matrix[j][i]
+            interaction = self.interaction_map[interaction_type]
+            return interaction.get_response_value(distance)
+        except IndexError:
+            return 0
+        except KeyError:
+            return 0
 
     def shape_coordinates(self,atom_coordinates):
         """
@@ -142,19 +148,20 @@ class InteractionManager:
         doublebond = [100,160]
         oxygen = [160,222]
 
-        bonds = []
-        for i in range(self.number_signals):
-            for j in range(self.number_signals):
-                if i < j:
-                    if self.interaction_matrix[i][j] in [2, 4]:
-                        if self.between(self.shift_data[i], singlebond) and self.between(self.shift_data[j], singlebond):
-                            btype = 1
-                        if self.between(self.shift_data[i], doublebond) and self.between(self.shift_data[j], doublebond):
-                            #btype = 2
-                            btype = 1
-                        else:
-                            btype = 1
-                        bonds.append([i+1, j+1, btype])
+        bonds = set()
+        for i in range(len(self.interaction_matrix)):
+            for j in range(len(self.interaction_matrix)):
+                if self.interaction_matrix[i][j] in [2, 4]:
+                    if self.between(self.shift_data[i], singlebond) and self.between(self.shift_data[j], singlebond):
+                        btype = 1
+                    if self.between(self.shift_data[i], doublebond) and self.between(self.shift_data[j], doublebond):
+                        btype = 2
+                    else:
+                        btype = 1
+                    new_bond = [i+1, j+1]
+                    new_bond.sort()
+                    bonds.add(tuple(new_bond+[btype]))
+        bonds = list(bonds)
         #Add Oxygens
         for shift_index,shift_value in enumerate(self.shift_data):
             if self.between(shift_value, oxygen):

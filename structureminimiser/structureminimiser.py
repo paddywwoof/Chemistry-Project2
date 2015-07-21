@@ -22,7 +22,7 @@ class StructureMinimiser:
         self.iterations = 0
         self.file_manager.reset()
 
-    def write_solution(self, filename):
+    def write_solution(self, filename, scale):
         self.file_manager.write_numpy_to_xyz("resources/" + filename, self.best_atom_coordinates * scale, self.interaction_manager.atom_types)
         self.file_manager.convert_xyz_to_mol("resources/" + filename)
 

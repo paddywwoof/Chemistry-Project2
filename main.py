@@ -1,6 +1,8 @@
 from interactionmanager.interactionmanager import InteractionManager
 from structureminimiser import StructureMinimiser
 from signalmanager import OneDSignalManager, TwoDSignalManager
+from filemanager import FileManager
+import filemanager
 
 def get_twod_signal_manager():
     oned_signal_manager = OneDSignalManager()
@@ -14,7 +16,7 @@ def get_twod_signal_manager():
 
 def get_interaction_manager(interaction_matrix, atom_types, shift_data):
     interaction_manager = InteractionManager(1001, interaction_matrix, atom_types, shift_data)
-    interaction_manager.add_default_interaction(0, "Default Repulsive", repulsive_amplitude=0.8, repulsive_time_constant=5)
+    interaction_manager.add_default_interaction(0, "Default Repulsive", repulsive_amplitude=0.8, repulsive_time_constant=5, depth =1)
     interaction_manager.add_new_interaction(index=1, interaction_name="COSY 3-Bond H-H   ", repulsive_amplitude=0.8, repulsive_time_constant=8.2, depth=3, attractive_amplitude=0.6, attractive_time_constant=200, power=3)
     interaction_manager.add_new_interaction(index=2, interaction_name="HSQC 1-Bond H-C   ", repulsive_amplitude=0.8, repulsive_time_constant=2.3, depth=3, attractive_amplitude=0.6, attractive_time_constant=200, power=3)
     interaction_manager.add_new_interaction(index=3, interaction_name="HMBC 2/3 Bond H-C ", repulsive_amplitude=0.8, repulsive_time_constant=6.5, depth=3, attractive_amplitude=0.6, attractive_time_constant=200, power=3)
@@ -24,7 +26,19 @@ def get_interaction_manager(interaction_matrix, atom_types, shift_data):
 def main():
     twod_signal_manager = get_twod_signal_manager()
     interaction_manager = get_interaction_manager(*twod_signal_manager.get_interaction_data())
+
+
+    for i, vec in enumerate(interaction_manager.interaction_matrix):
+        for j, vec2 in enumerate(vec):
+            if interaction_manager.interaction_matrix[i][j]==4:
+                print([i+1,j+1])
+
+    interaction_manager.print_matrix()
     structure_minimiser = StructureMinimiser(interaction_manager)
+    file_manager = FileManager()
+
+    mol_string = file_manager.convert_numpy_to_mol_string(interaction_manager)
+    filemanager.writefile('outfile.mol', mol_string)
 
     try:
         structure_minimiser.minimise_response()

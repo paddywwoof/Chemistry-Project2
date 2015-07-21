@@ -15,7 +15,7 @@ class TwoDSignalManager:
                           "HMBC": ("C", "H", 3),
                           }
         self.peak_bounds = {"H": 8.5, "C": 225}
-        self.shift_errors = {"H": 0.075, "C": 0.25}
+        self.shift_errors = {"H": 0.05, "C": 0.25}
         self.defined_nmrs = []
 
     def add_nmr_signals(self, nmr_type, twod_path):
