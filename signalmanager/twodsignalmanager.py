@@ -115,22 +115,21 @@ class TwoDSignalManager:
                        cosy
                       H----H
                 hsqc  |    |  hsqc
-                      C>C
-          implies  =>  inad
+                      C<<>>C
+          implies  =>  inad bond between CC
         """
 
         for i in range(len(interaction_matrix)):
             cosy_i = [x for x, y in enumerate(interaction_matrix[i]) if y == 1]
             hsqc_i = [x for x, y in enumerate(interaction_matrix[i]) if y == 2]
             b_cs = [x for x in cartesian(*[cosy_i, hsqc_i])]
-            #print("b_cs", b_cs)
             for b_c in b_cs:
                 b = b_c[0]
                 c = b_c[1]
                 d_s = [x for x, y in enumerate(interaction_matrix[b]) if y == 2]
                 b_ds = [x for x in cartesian([c], d_s)]
                 for b_d in b_ds:
-                    if b_d[0]!=b_d[1]:
+                    if b_d[0] != b_d[1]:
                         interaction_matrix[b_d[0]][b_d[1]] = 4
         return interaction_matrix
 
@@ -138,15 +137,19 @@ class TwoDSignalManager:
         plot_scatter([[signal.x_shift, signal.y_shift] for signal in self.twod_signals if signal.nmr_type == nmr_type])
 
     def get_interaction_data(self):
-        atom_types = []
-        shift_values = []
+        type_array = []
         signals = self.oned_signal_manager.signals
         for signal in signals:
-            atom_types.append(signal.signal_type)
-            shift_values.append(signal.x_shift)
-
+            type_array.append(signal.signal_type)
+        shift_values = self.get_shift_values()
         interaction_matrix = self.get_interaction_matrix()
-        return interaction_matrix, atom_types, shift_values
+        return interaction_matrix, type_array, shift_values
+
+    def get_shift_values(self):
+        shift_values = []
+        for signal in self.oned_signal_manager.signals:
+            shift_values.append(signal.x_shift)
+        return shift_values
 
 class TwoDSignal:
     def __init__(self, signal1, signal2, nmr_type):

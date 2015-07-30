@@ -10,13 +10,13 @@ class FileManager:
         self.last_write = time.time()
         self.start_time = time.time()
 
-    def write_numpy_to_xyz(self, filename, atom_coordinates, atom_types):
+    def write_numpy_to_xyz(self, filename, atom_coordinates, type_array):
         self.last_write = time.time()
-        xyz_string = self.convert_numpy_to_xyz_string(atom_coordinates, atom_types)
+        xyz_string = self.convert_numpy_to_xyz_string(atom_coordinates, type_array)
         writefile(filename, xyz_string)
 
-    def convert_numpy_to_xyz_string(self, atom_coordinates, atom_types):
-        signal_info = atom_types
+    def convert_numpy_to_xyz_string(self, atom_coordinates, type_array):
+        signal_info = type_array
         xyz_string = str(len(atom_coordinates))+"\n"
         xyz_string += "Energy Minimised Cartesian Coordinates\n"
         for i,atom in enumerate(atom_coordinates):
@@ -27,8 +27,16 @@ class FileManager:
         xyz_string = readfile(filename)
         xyz_data = xyz_string.splitlines()
         xyz_data = xyz_data[2:]
-        xyz_data = [line[2:] for line in xyz_data]
-        xyz_data = [line.replace(" ",",") for line in xyz_data]
+        for i, line in enumerate(xyz_data):
+            while xyz_data[i][0] == " ":
+                xyz_data[i] = xyz_data[i][1:]
+
+            while "  " in xyz_data[i]:
+                xyz_data[i] = xyz_data[i].replace("  ", " ")
+            xyz_data[i] = xyz_data[i][2:]
+
+        xyz_data = [line.replace(" ", ",") for line in xyz_data]
+
         xyz_data = ["["+line+"]" for line in xyz_data]
         xyz_data = [eval(line) for line in xyz_data]
         return np.array(xyz_data)
@@ -51,14 +59,14 @@ class FileManager:
         interaction_string = readfile(filename)
         interaction_list = [line.split(":") for line in interaction_string.splitlines()]
         interaction_matrix = []
-        atom_types = []
+        type_array = []
         shift_values = []
         for atom in interaction_list:
-            atom_types.append(atom[0])
+            type_array.append(atom[0])
             interaction_matrix.append(eval(atom[1].replace(" ", ",")))
             shift_values.append(float(atom[2]))
         interaction_matrix = np.array(interaction_matrix)
-        return interaction_matrix, atom_types, shift_values
+        return interaction_matrix, type_array, shift_values
 
     def write_numpy_to_mol(self,filename, interaction_manager, atom_coordinates = None):
         mol_file_string = self.convert_numpy_to_mol_string(interaction_manager, atom_coordinates)
@@ -67,31 +75,31 @@ class FileManager:
         file.close()
 
     def convert_numpy_to_mol_string(self, interaction_manager, atom_coordinates=None):
-        atom_types = interaction_manager.atom_types
+        type_array = interaction_manager.type_array
         bonds = interaction_manager.bonds
 
-        header = """Molecule Name \n     Additional Information\n\n %s %s  0  0  0  0  0  0  0  0999 V2000\n""" % (len(atom_types), len(bonds))
+        header = """Molecule Name \n     Additional Information\n\n %s %s  0  0  0  0  0  0  0  0999 V2000\n""" % (len(type_array), len(bonds))
         footer = "M  END"
         line = "    %s    %s    %s %s "+"  0"*12
         mol_file_string = ""
         mol_file_string += header
         if atom_coordinates is None:
-            for index, atom in enumerate(atom_types):
+            for index, atom in enumerate(type_array):
                 i1 = str(random.uniform(0, 1))[:6]
                 i2 = str(random.uniform(0, 1))[:6]
                 i3 = str(random.uniform(0, 1))[:6]
                 mol_file_string += line % (i1, i2, i3, atom)+"\n"
         else:
-            for index, atom in enumerate(atom_types):
-                i1 = str(atom_coordinates[index][0])[:6]
-                i2 = str(atom_coordinates[index][1])[:6]
-                i3 = str(atom_coordinates[index][2])[:6]
+            for index, atom in enumerate(type_array):
+                i1 = str(10*atom_coordinates[index][0])[:6] +"0" * max(0, 6-len(str(atom_coordinates[index][0])[:6]))
+                i2 = str(10*atom_coordinates[index][1])[:6] +"0" * max(0, 6-len(str(atom_coordinates[index][1])[:6]))
+                i3 = str(10*atom_coordinates[index][2])[:6] +"0" * max(0, 6-len(str(atom_coordinates[index][2])[:6]))
                 mol_file_string += line % (i1, i2, i3, atom)+"\n"
         bond_line = " %s %s  %s  0  0  0  0"
         for bond in bonds:
             pass
-            a1 = " "*(2-len(str(bond[0])))+str(bond[0])
-            a2 = " "*(2-len(str(bond[1])))+str(bond[1])
+            a1 = " "*(2-len(str(bond[0]+1)))+str(bond[0]+1)
+            a2 = " "*(2-len(str(bond[1]+1)))+str(bond[1]+1)
             if len(bond)>=3:
                 a3 = bond[2]
             else:

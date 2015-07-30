@@ -23,7 +23,7 @@ class StructureMinimiser:
         self.file_manager.reset()
 
     def write_solution(self, filename, scale):
-        self.file_manager.write_numpy_to_xyz("resources/" + filename, self.best_atom_coordinates * scale, self.interaction_manager.atom_types)
+        self.file_manager.write_numpy_to_xyz("resources/" + filename, self.best_atom_coordinates * scale, self.interaction_manager.type_array)
         self.file_manager.convert_xyz_to_mol("resources/" + filename)
 
     def minimise_response(self):
@@ -47,7 +47,7 @@ class StructureMinimiser:
         if self.file_manager.time_since_last_write() > 0.5 and write_out:
             speed = self.iterations*1.0/self.file_manager.get_running_time()
             print("Response Value: ", response, " Iterations: ", self.iterations, "Speed: ", speed, end="\r")
-            self.file_manager.write_numpy_to_xyz("output/tempfile.xyz", atom_coordinates, self.interaction_manager.atom_types)
+            self.file_manager.write_numpy_to_xyz("output/tempfile.xyz", atom_coordinates, self.interaction_manager.type_array)
         return response
 
     def get_now(self):

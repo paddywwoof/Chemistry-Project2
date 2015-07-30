@@ -1,0 +1,34 @@
+HEADER    PROTEIN                                 16-JUL-15   NONE
+TITLE     NULL                                                        
+COMPND    MOLECULE: Molecule Name                                     
+SOURCE    NULL                                                        
+KEYWDS    NULL                                                        
+EXPDTA    NULL                                                        
+AUTHOR    Marvin                                                      
+REVDAT   1   16-JUL-15         0                                  
+HETATM    1  H   UNK     0      -3.361  -0.893   1.724  0.00  0.00           H+0
+HETATM    2  H   UNK     0      -4.814  -0.379   0.834  0.00  0.00           H+0
+HETATM    3  H   UNK     0      -3.260  -0.542  -0.018  0.00  0.00           H+0
+HETATM    4  H   UNK     0      -3.289  -2.986   0.398  0.00  0.00           H+0
+HETATM    5  H   UNK     0      -4.843  -2.823   1.250  0.00  0.00           H+0
+HETATM    6  H   UNK     0      -5.881  -1.924  -0.815  0.00  0.00           H+0
+HETATM    7  H   UNK     0      -5.809  -4.018  -2.141  0.00  0.00           H+0
+HETATM    8  H   UNK     0      -5.910  -4.368  -0.399  0.00  0.00           H+0
+HETATM    9  H   UNK     0       0.318  -2.123   1.261  0.00  0.00           H+0
+HETATM   10  H   UNK     0       2.977  -0.318  -0.618  0.00  0.00           H+0
+HETATM   11  H   UNK     0       1.995  -2.502  -1.261  0.00  0.00           H+0
+HETATM   12  H   UNK     0      -0.664  -4.307   0.618  0.00  0.00           H+0
+HETATM   13  C   UNK     0      -3.889  -0.952   0.772  0.00  0.00           C+0
+HETATM   14  C   UNK     0      -4.214  -2.414   0.460  0.00  0.00           C+0
+HETATM   15  C   UNK     0      -5.281  -3.958  -1.189  0.00  0.00           C+0
+HETATM   16  C   UNK     0      -4.955  -2.497  -0.876  0.00  0.00           C+0
+HETATM   17  C   UNK     0       0.328  -4.031   0.261  0.00  0.00           C+0
+HETATM   18  C   UNK     0       1.985  -0.595  -0.261  0.00  0.00           C+0
+HETATM   19  C   UNK     0       0.460  -2.506   0.251  0.00  0.00           C+0
+HETATM   20  C   UNK     0       1.853  -2.119  -0.251  0.00  0.00           C+0
+HETATM   21  C   UNK     0       6.938  -2.313   0.000  0.00  0.00           C+0
+HETATM   22  C   UNK     0      -4.625   3.469   0.000  0.00  0.00           C+0
+HETATM   23  C   UNK     0       1.766   3.469   0.000  0.00  0.00           C+0
+HETATM   24  O   UNK     0       0.546   3.469   0.000  0.00  0.00           O+0
+MASTER        0    0    0    0    0    0    0    0   24    0    0    0
+END
