@@ -286,6 +286,4 @@ def main():
     raise SystemExit
 
 if __name__ == "__main__":
-    import cProfile
-    cProfile.run('main()')
-    #main()
+    main()

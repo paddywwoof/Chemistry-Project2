@@ -1,5 +1,5 @@
 from interactionmanager.interactionmanager import InteractionManager
-from structureminimiser import StructureMinimiser
+#from structureminimiser import StructureMinimiser
 from signalmanager import OneDSignalManager, TwoDSignalManager
 from filemanager import FileManager
 import filemanager
@@ -50,6 +50,7 @@ def main():
     structure_minimiser.write_solution("solution.xyz")
     interaction_manager.print_matrix()
 
+"""
 def test_main():
     interaction_manager = InteractionManager(1001, *get_twod_signal_manager().get_interaction_data())
     for x in range(1, 2000):
@@ -66,7 +67,7 @@ def test_main():
         interaction_manager.add_new_interaction(index=4, interaction_name="INAD 1-Bond C-C   ", repulsive_amplitude=0.8, repulsive_time_constant=x/250, depth=3, attractive_amplitude=0.6, attractive_time_constant=200, power=3)
 
     return interaction_manager
-
+"""
 
 if __name__ == "__main__":
     test_main()
