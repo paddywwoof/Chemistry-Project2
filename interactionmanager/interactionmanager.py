@@ -37,6 +37,7 @@ class Interaction:
     def get_response_value(self, distance):
         return self.distance_function[int(distance*1000)]
 
+
 class DefaultInteraction(Interaction):
     def __init__(self, x_axis, repulsive_amplitude, repulsive_time_constant, depth):
         self.interaction_name = "Default"
@@ -44,7 +45,7 @@ class DefaultInteraction(Interaction):
         self.distance_function = [0 for i in x_axis]
         for xi in x_axis:
             self.distance_function[xi] = self.depth * (repulsive_amplitude * math.exp(-xi/10*repulsive_time_constant))
-        self.minimum = np.argmin(self.distance_function)/1000
+        self.minimum = 0.154
         self.minimum_y = self.distance_function[np.argmin(self.distance_function)]
 
 
@@ -59,7 +60,7 @@ class HMBC(Interaction):
         rad = repulsive_amplitude * depth
         atc = attractive_time_constant
         rtc = repulsive_time_constant
-        flat_range = [250, 350]
+        flat_range = [200, 385]
 
         xi=0
         while xi < len(x_axis)-1:
@@ -75,6 +76,10 @@ class HMBC(Interaction):
         self.minimum = np.argmin(distance_function)/1000
         self.minimum_y = distance_function[np.argmin(distance_function)]
         self.distance_function = distance_function
+        self.minimum = np.argmin(self.distance_function)/1000
+        self.minimum_y = self.distance_function[np.argmin(self.distance_function)]
+
+        print(self.interaction_name+", Minimum at: ", self.minimum, "Nanometres")
 
 
 class InteractionManager:
@@ -108,18 +113,10 @@ class InteractionManager:
             (11, 9): 0.4945,
             (9, 8): 0.4252,
             (10, 11): 0.4252,
-            #Fake
-
-            (20,14): 0.146,
-            (21,20): 0.142,
-            (21,22): 0.146,
-            (15,22): 0.154,
-            (21,16): 0.142,
-            (20,17): 0.142,
-            (14,22): 0.250,
-            (20,22): 0.238,
-
+            (7,9): 0.2827,
+            (6,9): 0.3041
         }
+
         for i,j in self.global_frag_distances.keys():
             self.interaction_matrix[i][j] = 6
             self.interaction_matrix[j][i] = 6
@@ -168,6 +165,8 @@ class InteractionManager:
             repulsive amplitude : Repulsive Amplitude
             repulsive_time_constant : Repulsive Time Constant
             depth : Depth
+
+
             attractive_amplitude: Attractive Amplitude
             power : Power
 
@@ -193,7 +192,33 @@ class InteractionManager:
         distance = sqrt( (v1[0]-v2[0]) ** 2 + (v1[1]-v2[1]) ** 2 + (v1[2]-v2[2]) ** 2)
         return min(10000, distance)
 
-    def interaction_response(self, i, j, v1, v2, debug=False):
+    def get_force_coefficient(self, i, j, v1, v2):
+        interaction_type = self.interaction_matrix[j][i]
+
+        if interaction_type == 6:
+            if (i, j) in self.global_frag_distances:
+                scale = self.global_frag_distances[(i, j)]*10
+            elif (j, i) in self.global_frag_distances:
+                scale = self.global_frag_distances[(j, i)]*10
+        else:
+            scale = 1
+        interaction = self.interaction_map[interaction_type]
+
+
+        distance = np.linalg.norm(v2-v1)
+
+
+
+
+        delta = (interaction.minimum*scale - distance)
+
+        #print(distance, interaction.minimum*scale, delta)
+
+        return delta*delta
+
+
+
+    def interaction_response(self, i, j, v1, v2, debug=False, force=False):
         """
         Args:
             i  : ith Atom index in the array
@@ -215,9 +240,15 @@ class InteractionManager:
             distance = self.calculate_distance(v1/scale, v2/scale)  # in Nanometers
             interaction = self.interaction_map[interaction_type]
             response_value = interaction.get_response_value(distance)
+            if force and False:
 
-            if abs(distance - interaction.minimum) > 0.01 and debug and interaction_type!=0:
-                print("Interaction %s,%s of type %s is not minimal" % (i+2, j+2, interaction.interaction_name), ": is %s should be %s" % (distance*scale, scale*interaction.minimum))
+                response_value *= -1
+                response_value += interaction.minimum_y
+            a=abs((response_value - interaction.minimum_y))
+            if a > 0.1 and debug and interaction_type!=0:
+                print("Interaction %s,%s of type %s is not minimal" % (i+2, j+2, interaction.interaction_name), ": is %s should be %s" % (distance*scale, scale*interaction.minimum), "Response varies by %s "%a)
+            elif False:
+                print("Interaction %s,%s of type %s is minimal" % (i+2, j+2, interaction.interaction_name), ": is %s should be %s" % (distance*scale, scale*interaction.minimum), "Response varies by %s "%a)
             return response_value
         except IndexError:
             return 0

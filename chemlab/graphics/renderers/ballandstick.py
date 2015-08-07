@@ -26,6 +26,7 @@ class BallAndStickRenderer(AbstractRenderer):
 
     '''
     def __init__(self, widget, r_array, type_array, bonds, shading='phong'):
+
         super(BallAndStickRenderer, self).__init__(widget)
         vdw_dict = cdb.get("data", 'vdwdict')        
         

@@ -4,6 +4,7 @@ import datetime
 from scipy.optimize import basinhopping
 import numpy as np
 from filemanager import FileManager
+import os
 
 
 class StructureMinimiser:
@@ -33,7 +34,7 @@ class StructureMinimiser:
 
     def calculate_response_value(self, atom_coordinates, write_out=True):
         self.iterations += 1
-        atom_coordinates = atom_coordinates.reshape((self.interaction_manager.number_signals, 3))
+        atom_coordinates = atom_coordinates.reshape((self.interaction_manager.number_atoms, 3))
         response = 0
         for i, v1 in enumerate(atom_coordinates):
             for j, v2 in enumerate(atom_coordinates):
@@ -47,7 +48,8 @@ class StructureMinimiser:
         if self.file_manager.time_since_last_write() > 0.5 and write_out:
             speed = self.iterations*1.0/self.file_manager.get_running_time()
             print("Response Value: ", response, " Iterations: ", self.iterations, "Speed: ", speed, end="\r")
-            self.file_manager.write_numpy_to_xyz("output/tempfile.xyz", atom_coordinates, self.interaction_manager.type_array)
+            #self.file_manager.write_numpy_to_xyz("output/tempfile.xyz", atom_coordinates, self.interaction_manager.type_array)
+            self.file_manager.write_numpy_to_mol("tempfile.mol", self.interaction_manager, atom_coordinates/10)
         return response
 
     def get_now(self):
