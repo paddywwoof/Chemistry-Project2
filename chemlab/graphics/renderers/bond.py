@@ -26,7 +26,7 @@ class BondRenderer(AbstractRenderer):
     '''
     def __init__(self, widget, bonds, r_array, type_array, radius=0.02,
                  style="cylinders", shading='phong'):
-        #super(BondRenderer, self).__init__(widget)
+        super(BondRenderer, self).__init__(widget)
         
         self.bonds = bonds
         bounds_a, bounds_b = self._compute_bounds(r_array, bonds)

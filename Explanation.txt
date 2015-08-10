@@ -1,0 +1,58 @@
+Aim:
+To Fully determine the chemical structure of a molecule
+based on NMR Data
+
+
+Reading NMR Data from file:
+	Reading NMR Types:
+		1D H1 and H13 NMR Spectra
+			Input Carbon Peak Data and Hydrogen Integration Data
+			 # Example of each goes here
+		2D COSY, HSQC, HMBC
+		
+		Integration Data from Hydrogen Spectrum determines the number of hydrogens
+		represented by that peak
+		
+		Generate a list of 1D Signals with shift value, signal type (C or H)
+		and multiplicity
+		
+		2D Signal Manager reads all 2D data and finds the corresponding 1D signals that it is closest to,
+			and generates a 2D Signal corresponding to this peak.
+			If the peak differs from any 1D peak in either coordinate by a specified error value, then it is ignored
+			In the case of the COSY spectra, asymmetric peaks are also removed
+		
+		The 2D Signal Manager then creates an NxN Interaction Matrix of all the interaction types
+		with a row/column for each atom (i.e. signals with multiplicities > 1 will have multiple equivalent adjacent rows/columns)
+		
+			[
+			1:COSY
+			2:HSQC
+			3:HMBC
+			]
+						
+		INADEQUATE interactions are then inferred using the method shown below:
+			#INSERT DIAGRAM HERE
+	
+				
+		Infer bonds using HMBC by focusing only on the 3-bond HMBC interactions
+		
+Interaction Manager:
+	Interaction Manager takes the interaction manager, a list of the atom types and their shift values
+	
+	Determines immediately obvious bonds,
+		HSQC implies H-C bonds,
+		INAD implies C-C and C=C bonds
+		
+		
+Minimiser:
+	Takes the Interaction Manager and uses the data to create fragments
+	of the molecule representing chains of bonded atoms
+	
+	HMBC then infers inter-fragment bonds in the following manner:
+		Since HMBC usually represents 2/3 bond interactions try and form only 3-bond interactions
+			consider each HMBC interaction [HW,CZ]and check if is already satisfied
+			then check whether the valency of the carbon adjacent (CX) to HW is fully satisfied (eliminating the possibility of 2-bond interactions)
+			if there is only one carbon adjacent to CX with incomplete valency (CY) then 
+	
+	
+		

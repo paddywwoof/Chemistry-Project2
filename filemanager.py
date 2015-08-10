@@ -68,15 +68,13 @@ class FileManager:
         interaction_matrix = np.array(interaction_matrix)
         return interaction_matrix, type_array, shift_values
 
-    def write_numpy_to_mol(self,filename, interaction_manager, atom_coordinates = None):
-        mol_file_string = self.convert_numpy_to_mol_string(interaction_manager, atom_coordinates)
+    def write_numpy_to_mol(self,filename, bonds, type_array, atom_coordinates = None):
+        mol_file_string = self.convert_numpy_to_mol_string(bonds, type_array, atom_coordinates)
         file = open(filename, "w")
         file.write(mol_file_string)
         file.close()
 
-    def convert_numpy_to_mol_string(self, interaction_manager, atom_coordinates=None):
-        type_array = interaction_manager.type_array
-        bonds = interaction_manager.bonds
+    def convert_numpy_to_mol_string(self, bonds, type_array, atom_coordinates=None):
 
         header = """Molecule Name \n     Additional Information\n\n %s %s  0  0  0  0  0  0  0  0999 V2000\n""" % (len(type_array), len(bonds))
         footer = "M  END"

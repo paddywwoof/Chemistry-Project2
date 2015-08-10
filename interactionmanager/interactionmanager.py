@@ -303,7 +303,7 @@ class InteractionManager:
         #Add Oxygens
         for shift_index,shift_value in enumerate(self.shift_data):
             if self.between(shift_value, oxygen):
-                self.type_array.append("O")
+                self.type_array.append("N")
                 bond_data.append([shift_index+1,len(self.type_array),2])
         """
         bonds = [x[0:2] for x in bond_data]
@@ -312,8 +312,8 @@ class InteractionManager:
         return bonds, bond_orders
 
     def print_matrix(self):
-        print("     ",*[str(x+1)+" "*(3-len(str(x+1))) for x in range(self.number_atoms)])
+        print("     ",*[str(x)+" "*(3-len(str(x))) for x in range(self.number_atoms)])
         for x in range(self.number_atoms):
-            print(str(x+1)+" "*(2-len(str(x+1))), self.type_array[x], str(self.interaction_matrix[x]).replace(" ", "   "), self.shift_data[x])
+            print(str(x)+" "*(2-len(str(x))), self.type_array[x], str(self.interaction_matrix[x]).replace(" ", "   "), self.shift_data[x])
 
 
