@@ -72,7 +72,7 @@ class TwoDSignalManager:
 
     def clean_peaks_table(self, peaks_table, nmr_type):
         """
-        Removes peaks with low area or that lie outside of the nmr spectrum
+        Removes peaks with low area or that lie outside of the nmr2 spectrum
         """
         x_signal_type = self.nmr_types[nmr_type][0]
         y_signal_type = self.nmr_types[nmr_type][1]
@@ -168,5 +168,5 @@ def plot_scatter(peaks):
     ax.grid(True,linestyle='-',color='0.75')
     x_coords = [x[0] for x in peaks]
     y_coords = [x[1] for x in peaks]
-    ax.scatter(x_coords,y_coords,s=20, marker='o')
+    ax.scatter(x_coords, y_coords,s=20, marker='o')
     plt.show()

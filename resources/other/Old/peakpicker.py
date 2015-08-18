@@ -15,7 +15,7 @@ class PeakManager:
         Args:
             path : path of peaks text file
         Returns:
-            peak_coordinates : raw nmr peak data
+            peak_coordinates : raw nmr2 peak data
         """
         peaks_file = open(path)
         peaks_string = peaks_file.read()
@@ -33,7 +33,7 @@ class PeakManager:
         Similar diagonals are then merged together
 
         Args:
-            peak_points : raw nmr peak data
+            peak_points : raw nmr2 peak data
         Returns:
             grouped_diagonals : list of rounded diagonal peak points
         """

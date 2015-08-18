@@ -46,6 +46,7 @@ class MolecularGraphics:
                 self.bonds = np.array(bonds)
                 self.viewer.clear()
                 self.renderer = self.viewer.add_renderer(BallAndStickRenderer, 2*self.coordinates, self.type_array, self.bonds)
+
             except:
                 self.active=False
 

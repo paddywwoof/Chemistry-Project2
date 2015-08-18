@@ -11,6 +11,7 @@ class FileManager:
         self.start_time = time.time()
 
     def write_numpy_to_xyz(self, filename, atom_coordinates, type_array):
+        print("Writing to %s"%(os.pat.abspath(filename)))
         self.last_write = time.time()
         xyz_string = self.convert_numpy_to_xyz_string(atom_coordinates, type_array)
         writefile(filename, xyz_string)
@@ -68,13 +69,14 @@ class FileManager:
         interaction_matrix = np.array(interaction_matrix)
         return interaction_matrix, type_array, shift_values
 
-    def write_numpy_to_mol(self,filename, bonds, type_array, atom_coordinates = None):
-        mol_file_string = self.convert_numpy_to_mol_string(bonds, type_array, atom_coordinates)
+    def write_numpy_to_mol(self,filename, bonds, bond_orders, type_array, atom_coordinates = None):
+        mol_file_string = self.convert_numpy_to_mol_string(bonds, bond_orders, type_array, atom_coordinates)
         file = open(filename, "w")
         file.write(mol_file_string)
         file.close()
 
-    def convert_numpy_to_mol_string(self, bonds, type_array, atom_coordinates=None):
+    def convert_numpy_to_mol_string(self, bonds, bond_orders, type_array, atom_coordinates=None):
+        type_array = ["C" if x == "N" else x for x in type_array]
 
         header = """Molecule Name \n     Additional Information\n\n %s %s  0  0  0  0  0  0  0  0999 V2000\n""" % (len(type_array), len(bonds))
         footer = "M  END"
@@ -94,14 +96,15 @@ class FileManager:
                 i3 = str(10*atom_coordinates[index][2])[:6] +"0" * max(0, 6-len(str(atom_coordinates[index][2])[:6]))
                 mol_file_string += line % (i1, i2, i3, atom)+"\n"
         bond_line = " %s %s  %s  0  0  0  0"
-        for bond in bonds:
+        for index, bond in enumerate(bonds):
             pass
             a1 = " "*(2-len(str(bond[0]+1)))+str(bond[0]+1)
             a2 = " "*(2-len(str(bond[1]+1)))+str(bond[1]+1)
-            if len(bond)>=3:
+
+            if len(bond) >= 3:
                 a3 = bond[2]
             else:
-                a3 = 1
+                a3 = bond_orders[index]
             b = bond_line % (a1, a2, a3)
             mol_file_string += (b+"\n")
         mol_file_string += footer
