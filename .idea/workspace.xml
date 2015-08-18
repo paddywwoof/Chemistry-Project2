@@ -5,43 +5,12 @@
     <option name="ANALYSIS_IN_BACKGROUND" value="true" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="3993c8c7-8246-4944-894b-476085fee3c2" name="Default" comment="Fully Determined Indanone&#10;">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/Structure Solver Presentation.pptx" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/file_format.txt" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/resources/nmr2/twod/hsqc/hsqc_peak_data.txt" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/resources/nmr2/oned/hydrogen_integration_data.txt" />
-      <change type="DELETED" beforePath="E:\Dropbox\Documents\Repositories\Chemistry-Project2\.idea\Chemistry-Project2 (Martin-PC's conflicted copy 2015-08-05).iml" afterPath="" />
-      <change type="DELETED" beforePath="E:\Dropbox\Documents\Repositories\Chemistry-Project2\.idea\misc (Martin-PC's conflicted copy 2015-08-05).xml" afterPath="" />
-      <change type="DELETED" beforePath="E:\Dropbox\Documents\Repositories\Chemistry-Project2\.idea\workspace (Martin-PC's conflicted copy 2015-08-05).xml" afterPath="" />
-      <change type="DELETED" beforePath="E:\Dropbox\Documents\Repositories\Chemistry-Project2\.olex\manual2 (Martin-PC's conflicted copy 2015-08-05).odb" afterPath="" />
-      <change type="DELETED" beforePath="E:\Dropbox\Documents\Repositories\Chemistry-Project2\.olex\originals\tempfile (Martin-PC's conflicted copy 2015-08-05).mol" afterPath="" />
-      <change type="DELETED" beforePath="E:\Dropbox\Documents\Repositories\Chemistry-Project2\.olex\tempfile (Martin-PC's conflicted copy 2015-08-05).hist" afterPath="" />
-      <change type="DELETED" beforePath="E:\Dropbox\Documents\Repositories\Chemistry-Project2\.olex\tempfile (Martin-PC's conflicted copy 2015-08-05).metacif" afterPath="" />
-      <change type="DELETED" beforePath="E:\Dropbox\Documents\Repositories\Chemistry-Project2\.olex\tempfile (Martin-PC's conflicted copy 2015-08-05).odb" afterPath="" />
-      <change type="DELETED" beforePath="E:\Dropbox\Documents\Repositories\Chemistry-Project2\MyRenderer.py" afterPath="" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.olex/tempfile.odb" afterPath="$PROJECT_DIR$/.olex/tempfile.odb" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Explanation.txt" afterPath="$PROJECT_DIR$/Explanation.txt" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/resources/nmr/oned/carbon_integration_data.txt" afterPath="$PROJECT_DIR$/resources/nmr/oned/carbon_integration_data.txt" />
+    <list default="true" id="3993c8c7-8246-4944-894b-476085fee3c2" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/chemlabminimiser3.py" afterPath="$PROJECT_DIR$/chemlabminimiser3.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/resources/nmr/twod/cosy/cosy_peak_data.txt" afterPath="$PROJECT_DIR$/resources/nmr/twod/cosy/cosy_peak_data.txt" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/filemanager.py" afterPath="$PROJECT_DIR$/filemanager.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/graphics.py" afterPath="$PROJECT_DIR$/graphics.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/resources/nmr/twod/hmbc/hmbc_peak_data.txt" afterPath="$PROJECT_DIR$/resources/nmr/twod/hmbc/hmbc_peak_data.txt" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/resources/nmr/twod/hsqc/hsqc_peak_data.txt" afterPath="$PROJECT_DIR$/resources/nmr/twod/hsqc/hsqc_peak_data.txt" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/resources/nmr/oned/hydrogen_integration_data.txt" afterPath="$PROJECT_DIR$/resources/nmr/oned/hydrogen_integration_data.txt" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/interactionmanager/interactionmanager.py" afterPath="$PROJECT_DIR$/interactionmanager/interactionmanager.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/resources/old/peakpicker.py" afterPath="$PROJECT_DIR$/resources/old/peakpicker.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/resources/other/Old/peakpicker.py" afterPath="$PROJECT_DIR$/resources/other/Old/peakpicker.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.olex/tempfile.hist" afterPath="$PROJECT_DIR$/.olex/tempfile.hist" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.olex/tempfile.metacif" afterPath="$PROJECT_DIR$/.olex/tempfile.metacif" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tempfile.mol" afterPath="$PROJECT_DIR$/tempfile.mol" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.olex/originals/tempfile.mol" afterPath="$PROJECT_DIR$/.olex/originals/tempfile.mol" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/signalmanager/twodsignalmanager.py" afterPath="$PROJECT_DIR$/signalmanager/twodsignalmanager.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MOVED" beforePath="E:\Dropbox\Documents\Repositories\Chemistry-Project2\resources\nmr\oned\carbon_integration_data.txt" afterPath="$PROJECT_DIR$/resources/nmr2/oned/carbon_integration_data.txt" />
-      <change type="MOVED" beforePath="E:\Dropbox\Documents\Repositories\Chemistry-Project2\resources\nmr\twod\cosy\cosy_peak_data.txt" afterPath="$PROJECT_DIR$/resources/nmr2/twod/cosy/cosy_peak_data.txt" />
-      <change type="MOVED" beforePath="E:\Dropbox\Documents\Repositories\Chemistry-Project2\resources\nmr\twod\cosy\raw_peak_data" afterPath="$PROJECT_DIR$/resources/nmr2/twod/cosy/raw_peak_data" />
-      <change type="MOVED" beforePath="E:\Dropbox\Documents\Repositories\Chemistry-Project2\resources\nmr\twod\hmbc\hmbc_peak_data.txt" afterPath="$PROJECT_DIR$/resources/nmr2/twod/hmbc/hmbc_peak_data.txt" />
     </list>
     <ignored path="Chemistry-Project2.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -65,8 +34,8 @@
       <file leaf-file-name="chemlabminimiser3.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/chemlabminimiser3.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-1.7241379">
-              <caret line="193" column="17" selection-start-line="193" selection-start-column="8" selection-end-line="193" selection-end-column="17" />
+            <state vertical-scroll-proportion="0.0">
+              <caret line="145" column="0" selection-start-line="145" selection-start-column="0" selection-end-line="145" selection-end-column="0" />
               <folding>
                 <element signature="e#0#18#0" expanded="true" />
               </folding>
@@ -77,11 +46,21 @@
       <file leaf-file-name="interactionmanager.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/interactionmanager/interactionmanager.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.4437086">
-              <caret line="418" column="37" selection-start-line="418" selection-start-column="37" selection-end-line="418" selection-end-column="37" />
+            <state vertical-scroll-proportion="0.795756">
+              <caret line="307" column="54" selection-start-line="307" selection-start-column="54" selection-end-line="307" selection-end-column="54" />
               <folding>
                 <element signature="e#22#33#0" expanded="true" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="filemanager.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/filemanager.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.0">
+              <caret line="72" column="0" selection-start-line="72" selection-start-column="0" selection-end-line="72" selection-end-column="0" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -126,10 +105,10 @@
         <option value="$PROJECT_DIR$/resources/nmr/twod/cosy/cosy_peak_data.txt" />
         <option value="$PROJECT_DIR$/resources/nmr/twod/hsqc/hsqc_peak_data.txt" />
         <option value="$PROJECT_DIR$/resources/nmr/twod/hmbc/hmbc_peak_data.txt" />
-        <option value="$PROJECT_DIR$/filemanager.py" />
         <option value="$PROJECT_DIR$/graphics.py" />
         <option value="$PROJECT_DIR$/chemlab/graphics/renderers/bond.py" />
         <option value="$PROJECT_DIR$/signalmanager/twodsignalmanager.py" />
+        <option value="$PROJECT_DIR$/filemanager.py" />
         <option value="$PROJECT_DIR$/chemlabminimiser3.py" />
         <option value="$PROJECT_DIR$/interactionmanager/interactionmanager.py" />
       </list>
@@ -167,7 +146,6 @@
       <sortByType />
     </navigator>
     <panes>
-      <pane id="Scratches" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -217,6 +195,7 @@
         </subPane>
       </pane>
       <pane id="Scope" />
+      <pane id="Scratches" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -517,20 +496,26 @@
       <option name="project" value="LOCAL" />
       <updated>1439211671519</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="HMBC interactions well defined in both directions of C-C-C chain,">
+      <created>1439891819709</created>
+      <option name="number" value="00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1439891819709</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1382" height="744" extended-state="6" />
-    <editor active="false" />
+    <editor active="true" />
     <layout>
-      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.2569546" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.12737921" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.9461457" sideWeight="0.50416666" order="7" side_tool="true" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.22362205" sideWeight="0.50732064" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="11" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.47096092" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32913387" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.38897637" sideWeight="0.49583334" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.36220473" sideWeight="0.49267936" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
@@ -542,7 +527,7 @@
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3984252" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33067092" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32913387" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
     </layout>
     <layout-to-restore>
@@ -582,7 +567,8 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="About to Seperate out Graphics&#10;" />
     <MESSAGE value="Fully Determined Indanone&#10;" />
-    <option name="LAST_COMMIT_MESSAGE" value="Fully Determined Indanone&#10;" />
+    <MESSAGE value="HMBC interactions well defined in both directions of C-C-C chain," />
+    <option name="LAST_COMMIT_MESSAGE" value="HMBC interactions well defined in both directions of C-C-C chain," />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -852,13 +838,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/filemanager.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="78" column="64" selection-start-line="78" selection-start-column="64" selection-end-line="78" selection-end-column="64" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/resources/nmr/oned/hydrogen_integration_data.txt">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
@@ -944,10 +923,18 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/filemanager.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="72" column="0" selection-start-line="72" selection-start-column="0" selection-end-line="72" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/chemlabminimiser3.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-1.7241379">
-          <caret line="193" column="17" selection-start-line="193" selection-start-column="8" selection-end-line="193" selection-end-column="17" />
+        <state vertical-scroll-proportion="0.0">
+          <caret line="145" column="0" selection-start-line="145" selection-start-column="0" selection-end-line="145" selection-end-column="0" />
           <folding>
             <element signature="e#0#18#0" expanded="true" />
           </folding>
@@ -956,8 +943,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/interactionmanager/interactionmanager.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.4437086">
-          <caret line="418" column="37" selection-start-line="418" selection-start-column="37" selection-end-line="418" selection-end-column="37" />
+        <state vertical-scroll-proportion="0.795756">
+          <caret line="307" column="54" selection-start-line="307" selection-start-column="54" selection-end-line="307" selection-end-column="54" />
           <folding>
             <element signature="e#22#33#0" expanded="true" />
           </folding>

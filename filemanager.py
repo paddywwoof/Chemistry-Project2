@@ -69,13 +69,13 @@ class FileManager:
         interaction_matrix = np.array(interaction_matrix)
         return interaction_matrix, type_array, shift_values
 
-    def write_numpy_to_mol(self,filename, bonds, bond_orders, type_array, atom_coordinates = None):
-        mol_file_string = self.convert_numpy_to_mol_string(bonds, bond_orders, type_array, atom_coordinates)
+    def write_numpy_to_mol(self,filename, bonds, type_array, atom_coordinates = None):
+        mol_file_string = self.convert_numpy_to_mol_string(bonds, type_array, atom_coordinates)
         file = open(filename, "w")
         file.write(mol_file_string)
         file.close()
 
-    def convert_numpy_to_mol_string(self, bonds, bond_orders, type_array, atom_coordinates=None):
+    def convert_numpy_to_mol_string(self, bonds, type_array, atom_coordinates=None):
         type_array = ["C" if x == "N" else x for x in type_array]
 
         header = """Molecule Name \n     Additional Information\n\n %s %s  0  0  0  0  0  0  0  0999 V2000\n""" % (len(type_array), len(bonds))
@@ -100,11 +100,8 @@ class FileManager:
             pass
             a1 = " "*(2-len(str(bond[0]+1)))+str(bond[0]+1)
             a2 = " "*(2-len(str(bond[1]+1)))+str(bond[1]+1)
+            a3 = bond[2]
 
-            if len(bond) >= 3:
-                a3 = bond[2]
-            else:
-                a3 = bond_orders[index]
             b = bond_line % (a1, a2, a3)
             mol_file_string += (b+"\n")
         mol_file_string += footer

@@ -15,7 +15,10 @@ class ChemLabMinimiser:
         self.coordinate_manager = CoordinateManager(self, initial_coordinates, self.interaction_manager)
         self.iteration_number = 0
         self.fragments = self.generate_fragments_list()
-        self.graphics = MolecularGraphics(self.coordinate_manager.get_coordinates(), self.interaction_manager.get_type_array(), np.array(self.interaction_manager.get_bonds()))
+        self.graphics = MolecularGraphics(self.coordinate_manager.get_coordinates(),
+                                          self.interaction_manager.get_type_array(),
+                                          np.array(self.interaction_manager.get_bonds())
+                                          )
         self.hmbc_complete = False
 
     #TODO: Merge generate functions together
@@ -24,54 +27,37 @@ class ChemLabMinimiser:
         Creates a list of fragment objects
         """
         fragments = []
-        fragment_data = self.generate_fragment_groups()
-        for fragment_piece in fragment_data:
-            global_indices = fragment_piece['global indices']
-            global_bond_indices = fragment_piece['global bond indices']
-            fragment = Fragment(global_indices,
-                                global_bond_indices,
-                                self.coordinate_manager,
-                                self.interaction_manager
-                                )
-            fragments.append(fragment)
-        return fragments
-
-    def generate_fragment_groups(self):
-        fragment_groups = []
         unselected = [x for x in range(self.interaction_manager.get_number_atoms())]
+        selected = []
         while len(unselected) > 0:
             new_atoms = set()
             new_atoms.add(unselected[0])
-            atoms = []
-            new_bonds = []
-            new_bond_orders = []
+            global_indices = []
+            global_bond_indices = []
             while len(new_atoms) > 0:
                 a = list(new_atoms)[0]
-                atoms.append(a)
+                global_indices.append(a)
                 new_atoms.remove(a)
                 for bond_index, bond in enumerate(self.interaction_manager.get_bonds()):
-                    if atoms[-1] == bond[0] and bond[1] not in atoms:
+                    if global_indices[-1] == bond[0] and bond[1] not in global_indices:
                         new_atoms.add(bond[1])
-                    if atoms[-1] == bond[1] and bond[0] not in atoms:
+                    if global_indices[-1] == bond[1] and bond[0] not in global_indices:
                         new_atoms.add(bond[0])
-                    if a in bond and list(bond) not in new_bonds:
-                        new_bonds.append(list(bond))
-                        new_bond_orders.append(self.interaction_manager.get_bond_order(bond_index))
-            atoms.sort()
-            fragment_piece = dict()
-            fragment_piece["global indices"] = atoms
-            fragment_piece["global bond indices"] = new_bonds
-            fragment_piece["bond orders"] = new_bond_orders
-            fragment_groups.append(fragment_piece)
-            unselected = [x for x in range(self.interaction_manager.get_number_atoms()) if x not in sum([y["global indices"] for y in fragment_groups],[])]
-        return fragment_groups
+                    if a in bond and list(bond) not in global_bond_indices:
+                        global_bond_indices.append(list(bond))
+            global_indices.sort()
+            fragment = Fragment(global_indices, global_bond_indices, self.coordinate_manager, self.interaction_manager)
+            fragments.append(fragment)
+            selected += global_indices
+            unselected = [x for x in range(self.interaction_manager.get_number_atoms()) if x not in selected]
+        return fragments
+
 
     def main(self):
         mass_input = None
         while mass_input is None:
             try:
                 mass_input = float(input("What is the Mr of this molecule: "))
-
             except ValueError:
                 print("Mr Must be a floating point number")
                 continue
@@ -93,6 +79,17 @@ class ChemLabMinimiser:
             return
         else:
             print("Unsatisfied HMBCs: %s"% str(hmbc_interactions))
+
+            """
+            a = "~"
+            while a != "":
+                try:
+                    return
+                    a = input(">>>")
+                    eval(a)
+                except:
+                    break
+            """
 
         for hmbc in hmbc_interactions:
             for frag1 in self.fragments:
@@ -146,6 +143,7 @@ class ChemLabMinimiser:
         free_valencies = self.interaction_manager.get_free_valencies()
         if free_valencies[cz] == 0:
             return False
+
         if free_valencies[cx] == 0:
             cx_adjacent_carbons = [list(x) for x in self.interaction_manager.get_bonds() if cx in x]
             cx_adjacent_carbons = [x for x in uniq(cx_adjacent_carbons) if x!=cx and self.interaction_manager.get_free_valencies()[x]!=0]
@@ -169,20 +167,12 @@ class ChemLabMinimiser:
         print("Starting Iteration %s with %s fragments"%(self.iteration_number, len(self.fragments)))
         if not self.hmbc_complete:
             self.infer_hmbc()
-            return
+
         self.iteration_number += 1
-        self.optimise_substructures()
 
-        self.graphics.update_coordinates(self.coordinate_manager.get_coordinates())
-        self.interaction_manager.write_numpy_to_mol("tempfile.mol", self.coordinate_manager.get_coordinates())
-
-
-    def optimise_substructures(self):
         for fragment in self.fragments:
-
             fragment.start_iter()
             fragment.project_bond_lengths()
-
             fragment.rotate_bonds(sequence=1)
             fragment.rotate_bonds(sequence=1)
             fragment.verify()
@@ -190,6 +180,12 @@ class ChemLabMinimiser:
             fragment.translate()
             fragment.verify()
             self.update_coordinates()
+
+        self.graphics.update_coordinates(self.coordinate_manager.get_coordinates())
+        self.interaction_manager.write_numpy_to_mol("tempfile.mol", self.coordinate_manager.get_coordinates())
+
+
+
 
     def add_bond(self, fragment1, fragment2, bond):
         self.interaction_manager.set_interaction(bond[0], bond[1], 4)
@@ -308,9 +304,11 @@ class Fragment:
             uf = self.bisect_on_bond(bond, True)[1]
             angle = (np.pi/100) * random.uniform(0, 25)
 
-            if random.randrange(0,2)==0:
-                rvec = np.random.rand(3)
-                rotation_axis = np.cross(point_b-point_a, rvec)
+            if random.randrange(0, 3) == 0:
+                random_vector = np.random.rand(3)
+                rotation_axis = np.cross(point_b-point_a, random_vector)
+            elif random.randrange(0, 3) == 1:
+                rotation_axis = np.random.rand(3)
             else:
                 rotation_axis = point_b - point_a
 
