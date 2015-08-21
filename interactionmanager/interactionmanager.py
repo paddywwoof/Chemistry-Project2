@@ -1,26 +1,16 @@
 __author__ = 'martin'
 import math
 from math import sqrt
-
 import numpy as np
 import matplotlib.pyplot as plt
 from filemanager import FileManager
+from enum import Enum
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+class BondLengths:
+    single_carbon = 0.154
+    double_carbon = 0.142
+    carbonyl = 0.123
+    single_hydrogen = 0.109
 
 class Interaction:
     def __init__(self, interaction_name, x_axis, repulsive_amplitude, repulsive_time_constant, attractive_amplitude,
@@ -29,19 +19,18 @@ class Interaction:
         distance_function = [0 for i in x_axis]
 
         # To make equation easier to read
-        aad = attractive_amplitude * depth
-        rad = repulsive_amplitude * depth
+        aa = attractive_amplitude
+        ra = repulsive_amplitude
         atc = attractive_time_constant
         rtc = repulsive_time_constant
 
         for xi in x_axis:
-            distance_function[xi] = (aad * (1 - math.exp(-xi/(10 * atc))) + rad * (math.exp(-xi/(10*rtc))) - 1)**power
+            distance_function[xi] = (depth*(aa * (1 - math.exp(-xi/(10 * atc))) + ra * (math.exp(-xi/(10*rtc))) - 1))**power
             if distance_function[xi] > distance_function[xi-1] and distance_function[xi-1] < distance_function[xi-2]:
                 print(self.interaction_name+", Minimum at: ", (xi-1)/1000, "Nanometres")
         self.minimum = np.argmin(distance_function)/1000
         self.minimum_y = distance_function[np.argmin(distance_function)]
         self.distance_function = distance_function
-
 
     def plot_graph(self, x_axis):
         number_points = 400
@@ -54,6 +43,19 @@ class Interaction:
     def get_response_value(self, distance):
         return self.distance_function[int(distance*1000)]
 
+
+class BondInteraction(Interaction):
+    def __init__(self, interaction_name, bond_length):
+        self.interaction_name = interaction_name
+        self.minimum = bond_length
+        self.minimum_y = 0
+
+    def plot_graph(self, x_axis):
+        return
+
+    def get_response_value(self, distance):
+        return 0
+
 class DefaultInteraction(Interaction):
     def __init__(self, x_axis, repulsive_amplitude, repulsive_time_constant, depth):
         self.interaction_name = "Default"
@@ -61,7 +63,11 @@ class DefaultInteraction(Interaction):
         self.distance_function = [0 for i in x_axis]
         for xi in x_axis:
             self.distance_function[xi] = self.depth * (repulsive_amplitude * math.exp(-xi/10*repulsive_time_constant))
-        self.minimum = 0.154
+
+            #power=1
+            #aa=0
+
+        minimum = 0.154
         self.minimum_y = self.distance_function[np.argmin(self.distance_function)]
 
 
@@ -97,15 +103,6 @@ class HMBC(Interaction):
 
         print(self.interaction_name+", Minimum at: ", self.minimum, "Nanometres")
 
-
-
-
-
-
-
-
-
-
 class InteractionManager:
     """
     Managers the different types of interaction (e.g. HSQC, COSY etc, and their response values)
@@ -121,86 +118,29 @@ class InteractionManager:
         self.x_axis = range(10*axis_width)
         self.interaction_map = {}
         self.interaction_matrix = interaction_matrix
+
+        self.interaction_matrix[self.interaction_matrix == 1] = 0
+
+
+
+
         self.interaction_matrix_original = np.copy(interaction_matrix)
         self.file_manager = FileManager()
-
-        self.bond_data, self.atoms = self.generate_atoms(type_array, shift_data)
-        input(str([x for x in self.get_free_valencies()]))
+        self.bonds = []
+        self.atoms = []
+        self.initialise_atoms(type_array, shift_data)
 
         self.global_frag_distances = {
-        (2 ,3 ): 1.767,
-        (2 ,4 ): 1.769,
-        (2 ,15): 2.431,
-        (2 ,14): 2.500,
-        (2 ,17): 4.878,
-        (2 ,13): 4.133,
-        (3 ,15): 3.060,
-        (3 ,14): 2.486,
-        (3 ,13): 2.638,
-        (3 ,12): 4.110,
-        (3 ,11): 3.835,
-        (4 ,14): 3.072,
-        (4 ,15): 2.526,
-        (4 ,16): 4.788,
-        (4 ,17): 4.464,
-        (4 ,11): 4.522,
-        (4 ,12): 4.084,
-        (4 ,13): 2.896,
-        (14,15): 1.763,
-        (14,13): 4.101,
-        (14,11): 4.799,
-        (14,12): 4.722,
-        (14,20): 3.555,
-        (14,16): 4.505,
-        (14,17): 3.594,
-        (14,6 ): 4.864,
-        (15,13): 4.359,
-        (15,12): 4.864,
-        (15,17): 2.473,
-        (15,16): 3.583,
-        (15,6 ): 4.523,
-        (15,7 ): 4.840,
-        (16,17): 1.763,
-        (16,12): 4.162,
-        (16,20): 4.649,
-        (16,5 ): 2.441,
-        (16,6 ): 3.069,
-        (16,7 ): 2.531,
-        (17,5 ): 3.046,
-        (17,6 ): 2.562,
-        (17,7 ): 2.391,
-        (5 , 6): 1.780,
-        (5 , 7): 1.759,
-        (5 ,18): 3.128,
-        (5 ,19): 4.337,
-        (5 ,10): 4.550,
-        (5 , 9): 3.398,
-        (5 , 8): 4.741,
-        (5 ,20): 4.863,
-        (6 ,20): 4.783,
-        (6 ,19): 3.615,
-        (6 , 9): 4.801,
-        (7 ,18): 4.566,
-        (7 , 9): 4.866,
-        (20,13): 4.076,
-        (20,11): 3.334,
-        (20,12): 3.675,
-        (20,19): 4.772,
-        (13,11): 1.769,
-        (13,12): 1.776,
-        (12,11): 1.772,
-        (18,19): 1.779,
-        (19,10): 2.486,
-        (19,8 ): 2.498,
-        (19,9 ): 3.068,
-        (18,9 ): 2.509,
-        (18,10): 3.064,
-        (18,8 ): 2.483
+            (18, 10): 0.3963,
+            (18, 15): 0.4834,
+            (18, 13): 0.4781,
+            (15, 7): 0.3258
         }
 
-        for i,j in self.global_frag_distances.keys():
-            self.interaction_matrix[i-2][j-2] = 6
-            self.interaction_matrix[j-2][i-2] = 6
+
+
+        for i, j in self.global_frag_distances.keys():
+            self.set_interaction(i, j, 6, False)
 
     def add_default_interaction(self, index, interaction_name, repulsive_amplitude, repulsive_time_constant, depth):
         """
@@ -215,24 +155,31 @@ class InteractionManager:
     def reset(self):
         self.interaction_matrix = np.copy(self.interaction_matrix_original)
 
-    def set_interaction(self, x, y, i_type):
-        self.interaction_matrix[x][y] = i_type
-        self.interaction_matrix[y][x] = i_type
+    def set_interaction(self, x, y, i_type, overwrite=True):
+        current_i_type = self.interaction_matrix[x][y]
+        if overwrite or current_i_type in [0, 9]:
+            self.interaction_matrix[x][y] = i_type
+            self.interaction_matrix[y][x] = i_type
 
-    def get_interaction(self,x,y):
+    def get_interaction(self, x, y):
         return self.interaction_matrix[x][y]
 
-
-    def get_all_interactions(self, interaction_type):
+    def get_all_interaction_atoms(self, interaction_type):
         interactions = []
         for x1, row1 in enumerate(self.interaction_matrix):
             for x2, row2 in enumerate(self.interaction_matrix):
                 if x1 < x2:
                     if self.interaction_matrix[x1][x2] == interaction_type:
-                        interactions.append([x1, x2])  # Gets a list of all HMBC interactions
+                        a1 = self.atoms[x1]
+                        a2 = self.atoms[x2]
+                        interactions.append([a1, a2])  # Gets a list of all HMBC interactions
         return interactions
 
-    def add_new_interaction(self, index, interaction_name, repulsive_amplitude, repulsive_time_constant, depth,
+    def add_bond_interaction(self, index, interaction_name, bond_length):
+        new_interaction = BondInteraction(interaction_name, bond_length)
+        self.interaction_map[index] = new_interaction
+
+    def add_spatial_interaction(self, index, interaction_name, repulsive_amplitude, repulsive_time_constant, depth,
                             attractive_amplitude, attractive_time_constant, power):
         """
         Adds a new interaction to the interaction manager
@@ -293,6 +240,7 @@ class InteractionManager:
         distance = sqrt( (v1[0]-v2[0]) ** 2 + (v1[1]-v2[1]) ** 2 + (v1[2]-v2[2]) ** 2)
         return min(10000, distance)
 
+    """
     def get_force_coefficient(self, i, j, v1, v2):
         interaction_type = self.interaction_matrix[j][i]
 
@@ -307,6 +255,7 @@ class InteractionManager:
         distance = np.linalg.norm(v2-v1)
         delta = (interaction.minimum*scale - distance)
         return delta*delta
+    """
 
     def interaction_response(self, i, j, v1, v2, debug=False, force=False):
         """
@@ -321,12 +270,12 @@ class InteractionManager:
         try:
             interaction_type = self.interaction_matrix[j][i]
             if interaction_type == 6:
-                if (i+2, j+2) in self.global_frag_distances:
-                    scale = self.global_frag_distances[(i+2, j+2)]
-                elif (j+2, i+2) in self.global_frag_distances:
-                    scale = self.global_frag_distances[(j+2, i+2)]
+                if (i, j) in self.global_frag_distances:
+                    scale = self.global_frag_distances[(i, j)]
+                elif (j, i) in self.global_frag_distances:
+                    scale = self.global_frag_distances[(j, i)]
                 else:
-                    raise Exception("Scale not defined for %s, %s"%(i,j))
+                    raise Exception("Scale not defined for %s, %s" % (i, j))
             else:
                 scale = 1
             distance = self.calculate_distance(v1/scale, v2/scale)  # in Nanometers
@@ -338,9 +287,9 @@ class InteractionManager:
                 response_value += interaction.minimum_y
             a=abs((response_value - interaction.minimum_y))
             if a > 0.1 and debug and interaction_type!=0:
-                print("Interaction %s,%s of type %s is not minimal" % (i+2, j+2, interaction.interaction_name), ": is %s should be %s" % (distance*scale, scale*interaction.minimum), "Response varies by %s "%a)
+                print("Interaction %s,%s of type %s is not minimal" % (i, j, interaction.interaction_name), ": is %s should be %s" % (distance*scale, scale*interaction.minimum), "Response varies by %s "%a)
             elif False:
-                print("Interaction %s,%s of type %s is minimal" % (i+2, j+2, interaction.interaction_name), ": is %s should be %s" % (distance*scale, scale*interaction.minimum), "Response varies by %s "%a)
+                print("Interaction %s,%s of type %s is minimal" % (i, j, interaction.interaction_name), ": is %s should be %s" % (distance*scale, scale*interaction.minimum), "Response varies by %s "%a)
             return response_value
         except IndexError:
             return 0
@@ -354,81 +303,70 @@ class InteractionManager:
         #pyplot.ion()
         plt.show()
 
-    def between(self, x, interval):
-        if interval[0] <= x < interval[1]:
-            return True
-        else:
-            return False
+    def add_atom(self, shift_value, atom_type):
+        index_value = len(self.atoms)
+        new_atom = Atom(index_value, shift_value, atom_type)
+        self.atoms.append(new_atom)
 
-    def generate_atoms(self, type_array, shift_data):
-        bond_data = set()
+    def initialise_atoms(self, type_array, shift_data):
+        for index, atom_type in enumerate(type_array):
+            self.add_atom(shift_data[index], atom_type)
+
+        for shift_index, shift_value in enumerate(shift_data):  # Add Inferred C=O Oxygen atoms
+            if between(shift_value, oxygen_bond):
+                self.add_atom(shift_value, "O")
+                self.add_matrix_entry()
+                self.set_interaction(shift_index, len(self.atoms)-1, 7)
+
+        bond_set = set()
         for i in range(len(self.interaction_matrix)):
             for j in range(len(self.interaction_matrix)):
-                if self.get_interaction(i, j) in [2, 4, 5]:
-                    new_bond = [i, j]
-                    new_bond.sort()
-                    bond_data.add((new_bond[0], new_bond[1], 1))
-
-        bond_data = [list(x) for x in list(bond_data)]
-
-        atoms = []
-        for index, atom_type in enumerate(type_array):
-            new_atom = Atom(shift_data[index], atom_type, [bond for bond in bond_data if index in bond[0:2]])
-            atoms.append(new_atom)
-
-        #Add Oxygens
-        for shift_index, shift_value in enumerate(shift_data):
-            if between(shift_value, oxygen):
-
-                new_atom = Atom(0, "O", [bond for bond in bond_data if i in bond[0:2]])
-                type_array.append("O")
-                bond_data.append([shift_index, len(type_array)-1, 2])
-                atoms.append(new_atom)
-
-                im = np.zeros(shape=(len(self.interaction_matrix)+1, len(self.interaction_matrix)+1), dtype=self.interaction_matrix.dtype)
-                im[:-1, :-1] = self.interaction_matrix
-                self.interaction_matrix = im
-                self.set_interaction(shift_index, len(type_array)-1, 5)
+                i_type = self.get_interaction(i, j)
+                if i_type in [2, 4, 5, 7]:
+                    if i_type in [5, 7]:
+                        bond_order = 1
+                    else:
+                        bond_order = 1
+                    bond_set.add((self.atoms[min(i, j)], self.atoms[max(i, j)], bond_order, i_type))
 
 
-        return bond_data, atoms
+        for x in list(bond_set):
+            self.add_bond(*x)
+
+    def add_matrix_entry(self):
+        im = np.zeros(shape=(len(self.interaction_matrix)+1, len(self.interaction_matrix)+1), dtype=self.interaction_matrix.dtype)
+        im[:-1, :-1] = self.interaction_matrix
+        self.interaction_matrix = im
 
     def print_matrix(self):
-        print("     ",*[str(x)+" "*(3-len(str(x))) for x in range(self.get_number_atoms())])
+        print("     ", *[str(x)+" "*(3-len(str(x))) for x in range(self.get_number_atoms())])
 
         for x, atom in enumerate(self.atoms):
             print(str(x)+" "*(2-len(str(x))), self.atoms[x].atom_type, str(self.interaction_matrix[x]).replace(" ", "   "), self.atoms[x].shift_value)
 
     def write_numpy_to_mol(self, path, coordinates):
-        self.file_manager.write_numpy_to_mol(path, self.bond_data, self.get_type_array(), coordinates)
+        self.file_manager.write_numpy_to_mol(path, self.bonds, self.atoms, coordinates)
 
-    def add_bond(self, bond, bond_order):
-        new_bond = list(bond)+[bond_order]
-        self.bond_data.append(new_bond)
-        self.atoms[bond[0]].add_bond(new_bond)
-        self.atoms[bond[1]].add_bond(new_bond)
+    def add_bond(self, atom1, atom2, bond_order, interaction_type):
+        new_bond = Bond(atom1, atom2, bond_order, interaction_type)
+        self.bonds.append(new_bond)
 
     def get_bond_order(self, index):
-        return [x[2] for x in self.bond_data]
+        return [bond.bond_order for bond in self.bonds]
 
-    def get_bonds(self):
-
-        return [x[0:2] for x in self.bond_data]
+    def get_bonds_array(self):
+        return [bond.get_indices() for bond in self.bonds]
 
     def get_total_mass(self):
         total_mass = 0
+        if len(self.atoms) == 0:
+            raise Exception("Atom list is empty")
         for atom in self.atoms:
             total_mass += mass_dict[atom.atom_type]
         return total_mass
 
     def get_type(self, index):
-        try:
-            return self.atoms[index].atom_type
-        except Exception as e:
-            print(index)
-            print(self.atoms)
-            print(len(self.atoms))
-            raise e
+        return self.atoms[index].atom_type
 
     def get_type_array(self):
         return [atom.atom_type for atom in self.atoms]
@@ -437,14 +375,39 @@ class InteractionManager:
         return [atom.get_free_valency() for atom in self.atoms]
 
 
+    """
+    def update_bond(self, atom1, atom2, bond_order):
+        atom1.update_bond(atom2.index_value, bond_order)
+        atom2.update_bond(atom1.index_value, bond_order)
+        for i, bond in enumerate(self.bonds):
+            if bond[0:2] in [[atom1.index_value, atom2.index_value], [atom1.index_value, atom2.index_value]]:
+                self.bonds[i][2] = bond_order
+    """
 
+    def update_all_bonds(self):
+        # Keeps restarting updating bonds until bonds don't update any more
+        for bond in self.bonds:
+            if bond.update_bond():
+                self.update_all_bonds()
+                return
 
+    """
+    def check_double_bond_rings(self, atom_chain):
+        #  Checks for rings with all double bond shifts (usually benzene)
+        end_chain_atom = atom_chain[-1]
+        for atom in [self.atoms[x] for x in end_chain_atom.get_adjacent()]:
+            if atom.needs_double_bond():
+                if atom not in atom_chain:
+                    self.check_double_bond_rings(atom_chain+[atom])
+                elif atom != atom_chain[-2]:
+                    self.update_bond(atom[-1], atom[-2], 2)
+    """
 
-atom_valencies = {"C":4, "H":1, "O":2}
+atom_valencies = {"C": 4, "H": 1, "O": 2}
 singlebond = [0, 100]
 doublebond = [100, 160]
-oxygen = [160, 222]
-mass_dict = {"C":12, "O":16, "H":1, "N":14}
+oxygen_bond = [160, 222]
+mass_dict = {"C": 12, "O": 16, "H": 1, "N": 14}
 
 def between(x, interval):
     if interval[0] <= x < interval[1]:
@@ -454,11 +417,12 @@ def between(x, interval):
 
 
 class Atom:
-    def __init__(self, shift_value, atom_type, bonds):
+    def __init__(self, index_value, shift_value, atom_type):
+        self.index_value = index_value
         self.shift_value = shift_value
         self.atom_type = atom_type
         self.total_valency = atom_valencies[atom_type]
-        self.bonds = bonds
+        self.bonds = []
 
         if between(self.shift_value, doublebond):
             self.has_double_bond = True
@@ -466,7 +430,9 @@ class Atom:
             self.has_double_bond = False
 
     def needs_double_bond(self):
-        if not self.has_double_bond or 2 in [x[2] for x in self.bonds]:
+        if self.has_double_bond and 2 not in [x.bond_order for x in self.bonds]:
+            if self.atom_type == "H":
+                raise Exception("Hydrogen Cannot Double Bond")
             return True
         else:
             return False
@@ -474,47 +440,142 @@ class Atom:
     def get_free_valency(self):
         valency = self.total_valency
         for bond in self.bonds:
-            valency -= bond[2]
-        if self.has_double_bond and 2 not in [x[2] for x in self.bonds]:
+            valency -= bond.bond_order
+        if self.needs_double_bond():
             valency -= 1
+        if valency < 0:
+            raise Exception("Negative Valency Error: %s Atom %s has negative valency" %(self.atom_type, self.index_value))
         return valency
 
+    def __str__(self):
+        return str(self.index_value)
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __hash__(self):
+        return self.index_value
+
     def get_adjacent(self):
-        pass
+        return [bond.other(self) for bond in self.bonds]
 
     def add_bond(self, bond):
-        self.bonds.append(bond)
+        if bond not in self.bonds:
+            self.bonds.append(bond)
+
+    def get_bond(self, atom):
+        for bond in self.atoms:
+            if atom in bond:
+                return bond
+
+class Bond:
+    def __init__(self, atom1, atom2, bond_order, inferred_by, aromatic=False):
+        self.atom1 = atom1
+        self.atom2 = atom2
+        self.bond_indices = [atom1.index_value, atom2.index_value]
+        self.bond_order = 1
+        self.bond_length = 10
+        self.inferred_by = inferred_by
+        self.aromatic = aromatic
+        if bond_order != 2 and aromatic:
+            raise Exception("Only double bonds can be aromatic")
+        self.atom1.add_bond(self)
+        self.atom2.add_bond(self)
+
+    def __getitem__(self, key):
+        return self.bond_indices[key]
+
+    def update_bond(self):
+        if "H" in [self.atom1.atom_type, self.atom2.atom_type]:
+            if self.bond_length != BondLengths.single_hydrogen:
+                self.bond_length = BondLengths.single_hydrogen
+                return True
+
+        elif "O" in [self.atom1.atom_type, self.atom2.atom_type]:  # If C<>O Bond
+            if self.atom1.atom_type == "O":
+                oxygen = self.atom1
+            else:
+                oxygen = self.atom2
+            if between(oxygen.shift_value, oxygen_bond):
+                if self.bond_order != 2:
+                    self.bond_order = 2
+                    self.bond_length = BondLengths.carbonyl
+                    return True
+
+        elif ["C", "C"] == [self.atom1.atom_type, self.atom2.atom_type]:
+            if self.atom1.needs_double_bond() and self.atom2.needs_double_bond():
+                """
+                Atoms bonded to atom1 that need double bond and vice verse
+                If atom1 has only one double bond candidate and it is atom2, or vice versa
+                then atom1-atom2 is a double bond
+                """
+                atom1_doublebond_adjacents = [atom for atom in self.atom1.get_adjacent() if atom.needs_double_bond()]
+                atom2_doublebond_adjacents = [atom for atom in self.atom2.get_adjacent() if atom.needs_double_bond()]
+
+                a = len(atom1_doublebond_adjacents) == 1 and atom1_doublebond_adjacents[0] == self.atom2
+                b = len(atom2_doublebond_adjacents) == 1 and atom2_doublebond_adjacents[0] == self.atom1
+                if (a or b) and (self.atom1.get_free_valency() == 0 or self.atom2.get_free_valency() == 0):
+                    if "H" in [self.atom1.atom_type, self.atom2.atom_type]:
+                        raise Exception("Hydrogen Cannot Double Bond")
+                    if self.bond_order != 2:
+                        self.bond_order = 2
+                        self.bond_length = BondLengths.double_carbon
+                        return True
+
+            else:
+                if self.bond_length != BondLengths.single_carbon:
+                    self.bond_length = BondLengths.single_carbon
+                    return True
+
+        return False
+
+    def check_double_bond_rings(self, atom_chain=[]):
+        #  Checks for rings with all double bond shifts (usually benzene)
+        if len(atom_chain) == 0:
+            atom_chain = [self.atom1]
+        end_chain_atom = atom_chain[-1]
+        for atom in end_chain_atom.get_adjacent():
+            if atom.needs_double_bond():
+                if atom not in atom_chain:
+                    return self.check_double_bond_rings(atom_chain+[atom])
+                elif atom != atom_chain[-2]:
+                    for x in atom_chain:
+                        if len([y for y in x.get_adjacent() if y in atom_chain]) > 2:
+                            return
+                    atom_chain = atom_chain[:-1]
+                    if len(atom_chain) % 2 != 0:
+                        raise Exception("This Double Bond Ring Should not be possible")
+                    while len(atom_chain) > 0:
+                        bond = atom_chain[-1].get_bond(atom_chain[-2])
+                        bond.bond_order = 2
+                        bond.aromatic = True
+                        atom_chain = atom_chain[:-2]
+                    return True
+        return False
 
 
+    def other(self, atom):
+        if atom == self.atom1:
+            return self.atom2
+        elif atom == self.atom2:
+            return self.atom1
+        else:
+            raise Exception("Atom not in bond")
 
+    def __str__(self):
+        return str(self.get_indices())
 
+    def __repr__(self):
+        return self.__str__()
 
+    def __hash__(self):
+        return int("".join([str(ord(x)) for x in self.__str__()]))
 
+    def __contains__(self, item):
+        return item in [self.atom1, self.atom2]
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    def get_indices(self):
+        a1 = min([self.atom1.index_value, self.atom2.index_value])
+        a2 = max([self.atom1.index_value, self.atom2.index_value])
+        return [a1, a2]
 

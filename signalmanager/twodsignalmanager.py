@@ -36,10 +36,12 @@ class TwoDSignalManager:
         peaks_table = self.parse_peaks_string(twod_peaks_string)
         peaks_table = self.clean_peaks_table(peaks_table, nmr_type)
         for peak in peaks_table:
+
+
             signal_type_pair = self.nmr_types[nmr_type]
             signal1 = self.get_closest_1d_signal(peak[0], self.oned_signal_manager, signal_type_pair[0])
             signal2 = self.get_closest_1d_signal(peak[1], self.oned_signal_manager, signal_type_pair[1])
-            if signal1 and signal2:
+            if signal1 and signal2 and signal1 != signal2:
                 self.twod_signals.append(TwoDSignal(signal1, signal2, nmr_type))
             else:
                 print("%s Peak Removal: %s Varies by more than 0.1 from any peak" % ( nmr_type, str(peak[0:2])) )
