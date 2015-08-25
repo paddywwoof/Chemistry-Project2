@@ -33,7 +33,7 @@ class QtMolecularViewer(QtViewer):
     def __init__(self):
         super(QtMolecularViewer, self).__init__()
         self.actions = {}
-        
+
         self.representation = None
         self.widget.background_color = colors.black
         

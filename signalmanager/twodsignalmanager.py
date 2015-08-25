@@ -2,6 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from filemanager import readfile
 from itertools import product as cartesian
+from . import OneDSignalManager
+from .signalparser import parse_peaks_string
 
 np.set_printoptions(suppress=True)
 
@@ -13,18 +15,19 @@ class TwoDSignalManager:
         self.nmr_types = {"COSY": ("H", "H", 1),
                           "HSQC": ("C", "H", 2),
                           "HMBC": ("C", "H", 3),
+                          "NOESY": ("H","H", 6)
                           }
         self.peak_bounds = {"H": 8.5, "C": 225}
         self.shift_errors = {"H": 0.05, "C": 0.25}
         self.defined_nmrs = []
 
-    def add_nmr_signals(self, nmr_type, twod_path):
+    def add_nmr_signals(self, nmr_type, twod_peaks_string):
         self.defined_nmrs.append(nmr_type)
         if nmr_type not in self.nmr_types:
             raise AttributeError("%s is not a valid NMR type" % nmr_type)
-        self.parse_signals(twod_path, nmr_type)
+        self.parse_signals(twod_peaks_string, nmr_type)
 
-    def parse_signals(self, path, nmr_type):
+    def parse_signals(self, twod_peaks_string, nmr_type):
         """
         Parses peaks from file to table
         Remove small peaks and those outside the spectrum
@@ -32,8 +35,7 @@ class TwoDSignalManager:
 
         If COSY, removes asymmetric peaks
         """
-        twod_peaks_string = readfile(path)
-        peaks_table = self.parse_peaks_string(twod_peaks_string)
+        peaks_table = parse_peaks_string(twod_peaks_string)
         peaks_table = self.clean_peaks_table(peaks_table, nmr_type)
         for peak in peaks_table:
 
@@ -79,25 +81,18 @@ class TwoDSignalManager:
         x_signal_type = self.nmr_types[nmr_type][0]
         y_signal_type = self.nmr_types[nmr_type][1]
         for peak in peaks_table:
-            if peak[2] < 30 and nmr_type == "COSY" and False:
+            """
+            if peak[2] < 30 and nmr_type == "COSY":
                 print("%s Peak Removal: Peak %s is too small" % (nmr_type, peak))
                 peaks_table.remove(peak)
                 return self.clean_peaks_table(peaks_table, nmr_type)
+            """
             if not(0 < peak[0] < self.peak_bounds[x_signal_type]) or not(0 < peak[1] < self.peak_bounds[y_signal_type]):
                 print("%s Peak Removal: Peak %s does not fall in correct boundary" % (nmr_type, peak))
                 peaks_table.remove(peak)
                 return self.clean_peaks_table(peaks_table, nmr_type)
         return peaks_table
 
-    def parse_peaks_string(self, twod_peaks_string):
-        """
-        Converts peaks string to table of peaks
-        """
-        peak_string_list = twod_peaks_string.splitlines()
-        peak_points = [[float(y) for y in x.split("\t")[1:4]] for x in peak_string_list]
-        if [] in peak_points:
-            peak_points.remove([])
-        return peak_points
 
     def get_interaction_matrix(self):
         print("Defined NMRS:", self.defined_nmrs)
@@ -167,8 +162,8 @@ class TwoDSignal:
 def plot_scatter(peaks):
     fig = plt.figure(figsize=(6,6))
     ax = fig.add_subplot(111)
-    ax.grid(True,linestyle='-',color='0.75')
+    ax.grid(True, linestyle='-', color='0.75')
     x_coords = [x[0] for x in peaks]
     y_coords = [x[1] for x in peaks]
-    ax.scatter(x_coords, y_coords,s=20, marker='o')
+    ax.scatter(x_coords, y_coords, s=20, marker='o')
     plt.show()

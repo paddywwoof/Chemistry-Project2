@@ -175,13 +175,9 @@ class BallAndStickRepresentation(Model):
         self.viewer.update()
 
     def on_atom_selection_changed(self):
-        #self.glow_timer.stop()
-        # When selection state changes, the view update itself
         sel = self.selection_state['atoms'].indices
         cols = np.array(self.atom_colors.array)
-        
         cols[sel, -1] = 50
-                    
         self.atom_renderer.update_colors(cols)
         self.viewer.update()
     

@@ -1,21 +1,19 @@
 import numpy as np
-
 from filemanager import readfile
-
+from .signalparser import parse_integration_string
 
 class OneDSignalManager:
     def __init__(self):
         self.number_signals = 0
         self.signals = []
 
-    def add_nmr_signals(self, path, signal_type):
+    def add_nmr_signals(self, integration_string, signal_type):
         if signal_type not in ["H", "C"]:
             raise AttributeError("%s not a valid signal type" % signal_type)
-        self.parse_signals(path, signal_type)
+        self.parse_signals(integration_string, signal_type)
 
-    def parse_signals(self, path, signal_type):
-        integration_string = readfile(path)
-        integration_table = self.parse_integration_string(integration_string)
+    def parse_signals(self, integration_string, signal_type):
+        integration_table = parse_integration_string(integration_string)
         for peak in integration_table:
             shift1 = peak[0]
             shift2 = peak[1]
@@ -31,15 +29,7 @@ class OneDSignalManager:
                     self.signals.append(new_signal)
                 self.number_signals += new_signal.multiplicity
             else:
-                print("TMS Signal Detected at %s" % new_signal.x_shift)
-
-    def parse_integration_string(self, integration_string):
-        integration_string = integration_string.replace("\t", " ")
-        integration_table = integration_string.splitlines()
-        integration_table = [x.split(" ") for x in integration_table]
-        integration_table = [[float(y) for y in x[0:3]] for x in integration_table]
-        integration_table.sort()
-        return np.array(integration_table)
+                print("Solvent Signal Detected at %s" % new_signal.x_shift)
 
     def print_signals(self):
         for signal in self.signals:
@@ -60,7 +50,6 @@ class OneDSignal:
         x_shift_average = 0.5*x_shift1 + 0.5*x_shift2
         x_shift_rounded = round(x_shift_average, 2)
         return x_shift_rounded
-
 
 def main():
     signal_manager = OneDSignalManager()

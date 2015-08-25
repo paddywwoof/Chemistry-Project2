@@ -227,7 +227,6 @@ class QtViewer(QMainWindow):
     def keyPressEvent(self, evt):
         
         angvel = 0.3
-        
         if evt.key() == Qt.Key_Up:
             self.widget.camera.orbit_x(angvel)
             
@@ -248,7 +247,7 @@ class QtViewer(QMainWindow):
             action = self.key_actions.get(evt.key(), None)
             if action:
                 action()
-        
+
         self.widget.repaint()
 
 if __name__ == '__main__':

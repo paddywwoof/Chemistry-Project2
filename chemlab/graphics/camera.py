@@ -154,6 +154,8 @@ class Camera:
         self.orbit_y(-dx*fact)
         self.orbit_x(dy*fact)
 
+
+
     def mouse_zoom(self, inc):
         '''Convenience function to implement a zoom function.
 
@@ -190,8 +192,9 @@ class Camera:
         left = self.aspectratio * bottom
         right = self.aspectratio * top
         
-        return clip_matrix(left, right, bottom, top,
+        proj = clip_matrix(left, right, bottom, top,
                            self.z_near, self.z_far, perspective=True)
+        return proj
         
         
     projection = property(_get_projection_matrix)
@@ -257,7 +260,6 @@ class Camera:
         matrix = self.projection.dot(self.matrix)
         IM = LA.inv(matrix)
         res = np.dot(IM, source)
-        
         return res[0:3]/res[3]
 
     def autozoom(self, points):

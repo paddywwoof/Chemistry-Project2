@@ -186,7 +186,6 @@ class QChemlabWidget(QGLWidget):
         self.ldir = cam[:3, :3].T.dot(self.light_dir)
 
 
-
         # Draw World
         self.on_draw_world()
 
@@ -261,17 +260,17 @@ class QChemlabWidget(QGLWidget):
         self._clickstart = time.time()
         self._last_mouse_right = evt.button() == Qt.RightButton
         self._last_mouse_left = evt.button() == Qt.LeftButton
-
         self._last_mouse_pos = evt.pos()
 
+
     def mouseReleaseEvent(self, evt):
-        if  time.time() - self._clickstart < 0.2:
+        if time.time() - self._clickstart < 0.2:
             self.clicked.emit(evt)
 
     def screen_to_normalized(self, x, y):
         w = self.width()
         h = self.height()
-        return  2*float(x)/w - 1.0, 1.0 - 2*float(y)/h
+        return 2*float(x)/w - 1.0, 1.0 - 2*float(y)/h
 
     def mouseMoveEvent(self, evt):
         if self._last_mouse_right:

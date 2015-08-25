@@ -468,6 +468,9 @@ class Atom:
             if atom in bond:
                 return bond
 
+    def print_data(self):
+        print("Selected Atom:", " Type:", self.atom_type, " Shift Value:", self.shift_value)
+
 class Bond:
     def __init__(self, atom1, atom2, bond_order, inferred_by, aromatic=False):
         self.atom1 = atom1

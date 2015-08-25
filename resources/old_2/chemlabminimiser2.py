@@ -5,7 +5,7 @@ from chemlab.graphics.transformations import rotation_matrix
 from chemlab.io.handlers import MolIO
 import random
 
-from main import get_interaction_manager,get_twod_signal_manager
+from graphics_test import get_interaction_manager,get_twod_signal_manager
 from filemanager import FileManager
 
 global_frag_distances = {(12, 6): 4.63,

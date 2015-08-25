@@ -1,15 +1,20 @@
 import numpy as np
 import random
 from chemlab.graphics.transformations import rotation_matrix
-from graphics import MolecularGraphics
+from graphics2 import MolecularGraphics
 
 from interactionmanager import InteractionManager
 from signalmanager import OneDSignalManager, TwoDSignalManager
+from signalmanager import get_twod_signal_manager
+import os
 
+
+def clear():
+    os.system('cls' if os.name == 'nt' else 'clear')
 
 class ChemLabMinimiser:
-    def __init__(self):
-        self.interaction_manager = get_interaction_manager(*get_twod_signal_manager().get_interaction_data())
+    def __init__(self, path):
+        self.interaction_manager = get_interaction_manager(*get_twod_signal_manager(path).get_interaction_data())
         self.best_response_value = 1000000.0
         initial_coordinates = np.random.rand(self.interaction_manager.get_number_atoms(), 3)
         self.coordinate_manager = CoordinateManager(self, initial_coordinates, self.interaction_manager)
@@ -72,8 +77,6 @@ class ChemLabMinimiser:
                 graphics_update = True
                 self.interaction_manager.set_interaction(hmbc[0].index_value, hmbc[1].index_value, 0)
                 hmbc_interactions.remove(hmbc)
-        if graphics_update:
-            self.update_graphics()
 
         #hmbc_interactions = [x for x in hmbc_interactions if self.bond_distance(x[0], x[1]) not in [2, 3]]
 
@@ -82,8 +85,9 @@ class ChemLabMinimiser:
             self.hmbc_complete = True
             return
         else:
-            print("Unsatisfied HMBCs: %s" % str(hmbc_interactions))
-            print("Free Valencies", self.interaction_manager.get_free_valencies())
+            #print("Unsatisfied HMBCs: %s" % str(hmbc_interactions))
+            #print("Free Valencies", self.interaction_manager.get_free_valencies())
+            pass
 
         for hmbc in hmbc_interactions:
             for frag1 in self.fragments:
@@ -150,17 +154,21 @@ class ChemLabMinimiser:
                 return False
 
     def iteration(self):
+        clear()
         print("Starting Iteration %s with %s fragments"%(self.iteration_number, len(self.fragments)))
+        selected_atoms = self.graphics.get_selected_atoms()
+        if len(selected_atoms) > 0:
+            for atom in selected_atoms:
+                atom.print_data()
+
         if not self.hmbc_complete:
-            if self.infer_hmbc():
-                self.update_graphics()
+            self.infer_hmbc()
         self.interaction_manager.update_all_bonds()
 
         self.iteration_number += 1
 
         for fragment in self.fragments:
             fragment.project_bond_lengths()
-
 
         for fragment in self.fragments:
             if self.iteration_number < 150:
@@ -189,7 +197,7 @@ class ChemLabMinimiser:
         self.update_graphics()
 
     def update_graphics(self):
-        self.graphics.update(self.coordinate_manager.get_coordinates(), self.interaction_manager)
+        self.graphics.update(self.coordinate_manager.get_coordinates())
 
     def update_coordinates(self):
         self.graphics.update_coordinates(self.coordinate_manager.get_coordinates())
@@ -215,7 +223,6 @@ class Fragment:
 
             if abs(current_bond_length-bond_length) > 0.1:
 
-                print(bond_length/current_bond_length)
 
                 corrected_bond_vector = bond_vector * (bond_length/current_bond_length)
                 atom_coordinates[frozen] += (corrected_bond_vector-bond_vector)
@@ -358,23 +365,7 @@ class CoordinateManager:
         return np.copy(self.atom_coordinates)
 
 
-def get_twod_signal_manager():
-    oned_signal_manager = OneDSignalManager()
-    oned_signal_manager.add_nmr_signals('resources/nmr/oned/hydrogen_integration_data.txt', "H")
-    oned_signal_manager.add_nmr_signals('resources/nmr/oned/carbon_integration_data.txt', "C")
 
-    carbons = len([signal for signal in oned_signal_manager.signals if signal.signal_type == "C"])
-    hydrogens = len([signal for signal in oned_signal_manager.signals if signal.signal_type == "H"])
-    print("%s Carbons and %s Hydrogens"%(carbons, hydrogens))
-
-    input("Press Enter to Continue...")
-
-
-    twod_signal_manager = TwoDSignalManager(oned_signal_manager)
-    twod_signal_manager.add_nmr_signals("COSY", 'resources/nmr/twod/cosy/cosy_peak_data.txt')
-    twod_signal_manager.add_nmr_signals("HSQC", 'resources/nmr/twod/hsqc/hsqc_peak_data.txt')
-    twod_signal_manager.add_nmr_signals("HMBC", 'resources/nmr/twod/hmbc/hmbc_peak_data.txt')
-    return twod_signal_manager
 
 
 def get_interaction_manager(interaction_matrix, type_array, shift_data):
@@ -397,11 +388,10 @@ def end():
     raise SystemExit
 
 def main():
-    clm = ChemLabMinimiser()
+    path = "C:/users/martin/desktop/nmr samples/edmpc/edmpc.zip"
+    clm = ChemLabMinimiser(path)
     clm.main()
     end()
 
 if __name__ == "__main__":
-    #import cProfile
-    #cProfile.run('main()')
     main()

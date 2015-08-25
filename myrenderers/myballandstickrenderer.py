@@ -3,6 +3,7 @@ from chemlab.graphics.renderers.atom import AtomRenderer
 from chemlab.graphics.renderers.line import LineRenderer
 
 from .mybondrenderer import MyBondRenderer
+from .myatomrenderer import MyAtomRenderer
 
 
 from chemlab.db import ChemlabDB
@@ -28,7 +29,7 @@ class MyBallAndStickRenderer(AbstractRenderer):
 
 
     '''
-    def __init__(self, widget, r_array, type_array, bonds, bond_colors, interactions, interaction_colors, shading='phong'):
+    def __init__(self, widget, r_array, type_array, atom_colors, bonds, bond_colors, interactions, interaction_colors, shading='phong'):
         super(MyBallAndStickRenderer, self).__init__(widget)
         vdw_dict = cdb.get("data", 'vdwdict')
         
@@ -37,8 +38,7 @@ class MyBallAndStickRenderer(AbstractRenderer):
             vdw_dict[k] = vdw_dict[k] * scale
         
         self.has_bonds = len(bonds) > 0
-        
-        self.ar = AtomRenderer(widget, r_array, type_array, radii_map=vdw_dict, shading=shading)
+        self.ar = MyAtomRenderer(widget, r_array, type_array, atom_colors, radii_map=vdw_dict, shading=shading)
 
         if self.has_bonds:
             self.br = MyBondRenderer(widget, bonds, bond_colors, r_array, style='impostors', shading=shading)
