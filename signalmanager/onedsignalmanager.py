@@ -1,62 +1,47 @@
-import numpy as np
-from filemanager import readfile
-from .signalparser import parse_integration_string
+from .signalparsers import parse_table, parse_1d_peak_list
+
 
 class OneDSignalManager:
     def __init__(self):
         self.number_signals = 0
         self.signals = []
 
-    def add_nmr_signals(self, integration_string, signal_type):
+    def add_nmr_signals(self, input_string, signal_type, signal_format):
+
         if signal_type not in ["H", "C"]:
             raise AttributeError("%s not a valid signal type" % signal_type)
-        self.parse_signals(integration_string, signal_type)
+        if signal_format == "integral":
+            self.parse_integration_signals(input_string, signal_type)
+        elif signal_format == "peak":
+            self.parse_peak_signals(input_string, signal_type)
+        else:
+            raise AttributeError("%s not a valid format type" % signal_format)
 
-    def parse_signals(self, integration_string, signal_type):
-        integration_table = parse_integration_string(integration_string)
+    def parse_peak_signals(self, peak_string, signal_type):
+        carbon_table = parse_1d_peak_list(peak_string, start_line=1)
+        for row in carbon_table:
+            if row[1] == "Solvent":
+                print("Solvent Peak at shift %s" % row[0])
+            else:
+                new_signal = OneDSignal(row[0], row[0], 1, signal_type, self.number_signals)
+                self.signals.append(new_signal)
+                self.number_signals += new_signal.multiplicity
+
+    def parse_integration_signals(self, integration_string, signal_type):
+        integration_table = parse_table(integration_string, start_line=0)
         for peak in integration_table:
             shift1 = peak[0]
             shift2 = peak[1]
-            if signal_type == "H":
-                magnitude = peak[2]
-            elif signal_type == "C":
-                magnitude = 1
-            else:
-                magnitude = 0
+            magnitude = peak[2]
             new_signal = OneDSignal(shift1, shift2, magnitude, signal_type, self.number_signals)
-            if not(signal_type == "C" and 76.90 <= new_signal.x_shift <= 77.60):
-                for x in range(new_signal.multiplicity):
-                    self.signals.append(new_signal)
-                self.number_signals += new_signal.multiplicity
-            else:
-                print("Solvent Signal Detected at %s" % new_signal.x_shift)
-
-    def print_signals(self):
-        for signal in self.signals:
-            print(signal.x_shift, " "*(6-len(str(signal.x_shift))), signal.signal_type, signal.multiplicity, signal.signal_numbers)
+            for x in range(new_signal.multiplicity):
+                self.signals.append(new_signal)
+            self.number_signals += new_signal.multiplicity
 
 
 class OneDSignal:
     def __init__(self, x_shift1, x_shift2, magnitude, signal_type, start_index):
-        self.x_shift = self.get_shift(x_shift1, x_shift2)
+        self.x_shift = round(0.5*x_shift1 + 0.5*x_shift2, 2)
         self.signal_type = signal_type
         self.multiplicity = int(round(magnitude))
-        self.signal_numbers = self.get_signal_numbers(start_index)
-
-    def get_signal_numbers(self, start_index):
-        return [x for x in range(start_index, start_index + self.multiplicity)]
-
-    def get_shift(self, x_shift1, x_shift2):
-        x_shift_average = 0.5*x_shift1 + 0.5*x_shift2
-        x_shift_rounded = round(x_shift_average, 2)
-        return x_shift_rounded
-
-def main():
-    signal_manager = OneDSignalManager()
-    signal_manager.add_nmr_signals('resources/oned/hydrogen_integration_data.txt', "H")
-    signal_manager.add_nmr_signals('resources/oned/carbon_integration_data.txt', "C")
-    signal_manager.print_signals()
-
-
-if __name__ == "__main__":
-    main()
+        self.signal_numbers = list(range(start_index, start_index + self.multiplicity))

@@ -5,7 +5,7 @@ from graphics2 import MolecularGraphics
 
 from interactionmanager import InteractionManager
 from signalmanager import OneDSignalManager, TwoDSignalManager
-from signalmanager import get_twod_signal_manager
+from signalmanager import get_twod_signal_manager, InteractionValues
 import os
 
 
@@ -370,13 +370,13 @@ class CoordinateManager:
 
 def get_interaction_manager(interaction_matrix, type_array, shift_data):
     interaction_manager = InteractionManager(1001, interaction_matrix, type_array, shift_data)
-    interaction_manager.add_default_interaction(0, "Default Repulsive", repulsive_amplitude=0.8, repulsive_time_constant=0.2, depth=100)
-    interaction_manager.add_spatial_interaction(index=1, interaction_name="COSY 3-Bond H-H          ", repulsive_amplitude=0.8, repulsive_time_constant=6.28, depth=0, attractive_amplitude=0.6, attractive_time_constant=200, power=3)
-    interaction_manager.add_bond_interaction(index=2,    interaction_name="HSQC 1-Bond H-C          ", bond_length=0.109)
-    interaction_manager.add_hmbc_interaction(index=3,    interaction_name="HMBC 2/3 Bond H-C        ", repulsive_amplitude=0.8, repulsive_time_constant=6.50, depth=1, attractive_amplitude=0.6, attractive_time_constant=200, power=3)
-    interaction_manager.add_bond_interaction(index=4,    interaction_name="INAD Single 1-Bond C-C   ", bond_length=0.154)
-    interaction_manager.add_spatial_interaction(index=6, interaction_name="NOESY Normalised Function", repulsive_amplitude=0.8, repulsive_time_constant=2.03, depth=3, attractive_amplitude=0.6, attractive_time_constant=200, power=3)
-    interaction_manager.add_bond_interaction(index=7,    interaction_name="Inferred C=O Bond Type   ", bond_length=0.142)
+    interaction_manager.add_default_interaction(InteractionValues.DEFAULT, "Default Repulsive", repulsive_amplitude=0.8, repulsive_time_constant=0.2, depth=100)
+    interaction_manager.add_spatial_interaction(index=InteractionValues.COSY, interaction_name="COSY 3-Bond H-H          ", repulsive_amplitude=0.8, repulsive_time_constant=6.28, depth=0, attractive_amplitude=0.6, attractive_time_constant=200, power=3)
+    interaction_manager.add_bond_interaction(index=InteractionValues.HSQC,    interaction_name="HSQC 1-Bond H-C          ", bond_length=0.109)
+    interaction_manager.add_hmbc_interaction(index=InteractionValues.HMBC,    interaction_name="HMBC 2/3 Bond H-C        ", repulsive_amplitude=0.8, repulsive_time_constant=6.50, depth=1, attractive_amplitude=0.6, attractive_time_constant=200, power=3)
+    interaction_manager.add_bond_interaction(index=InteractionValues.INAD,    interaction_name="INAD Single 1-Bond C-C   ", bond_length=0.154)
+    interaction_manager.add_spatial_interaction(index=InteractionValues.NOESY, interaction_name="NOESY Normalised Function", repulsive_amplitude=0.8, repulsive_time_constant=2.03, depth=3, attractive_amplitude=0.6, attractive_time_constant=200, power=3)
+    interaction_manager.add_bond_interaction(index=InteractionValues.CARBONYL,    interaction_name="Inferred C=O Bond Type   ", bond_length=0.142)
     return interaction_manager
 
 
@@ -388,7 +388,7 @@ def end():
     raise SystemExit
 
 def main():
-    path = "C:/users/martin/desktop/nmr samples/edmpc/edmpc.zip"
+    path = "C:/users/martin/desktop/nmr samples/edmpc_new_format/edmpc_new_format.zip"
     clm = ChemLabMinimiser(path)
     clm.main()
     end()

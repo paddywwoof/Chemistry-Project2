@@ -16,11 +16,11 @@ def get_twod_signal_manager(path):
     nmr_file.close()
 
     oned_signal_manager = OneDSignalManager()
-    for oned in [("PROTON", "H"), ("CARBON", "C")]:
-        oned_signal_manager.add_nmr_signals(nmr_string_dict[oned[0]], oned[1])
+    for oned in [("PROTON", "H", "integral"), ("CARBON", "C", "peak")]:
+        oned_signal_manager.add_nmr_signals(nmr_string_dict[oned[0]], oned[1], oned[2])
 
     twod_signal_manager = TwoDSignalManager(oned_signal_manager)
     for twod in ["COSY", "HSQC", "HMBC", "NOESY"]:
-        twod_signal_manager.add_nmr_signals(twod, nmr_string_dict[twod])
+        twod_signal_manager.add_nmr_signals(nmr_string_dict[twod], twod, "peak")
 
     return twod_signal_manager

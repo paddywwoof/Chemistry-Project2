@@ -1,98 +1,94 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from filemanager import readfile
 from itertools import product as cartesian
-from . import OneDSignalManager
-from .signalparser import parse_peaks_string
+from .signalparsers import parse_table
 
 np.set_printoptions(suppress=True)
+
+fudge_factor = 2
+
+
+class InteractionValues:
+    DEFAULT = 0
+    COSY = 1
+    HSQC = 2
+    HMBC = 3
+    INAD = 4
+    NOESY = 6
+    CARBONYL = 7
 
 class TwoDSignalManager:
     def __init__(self, oned_signal_manager):
         self.oned_signal_manager = oned_signal_manager
         self.number_signals = oned_signal_manager.number_signals
         self.twod_signals = []
-        self.nmr_types = {"COSY": ("H", "H", 1),
-                          "HSQC": ("C", "H", 2),
-                          "HMBC": ("C", "H", 3),
-                          "NOESY": ("H","H", 6)
+        self.nmr_types = {"COSY" : ("H", "H", InteractionValues.COSY),
+                          "HSQC" : ("C", "H", InteractionValues.HSQC),
+                          "HMBC" : ("C", "H", InteractionValues.HMBC),
+                          "NOESY": ("H", "H", InteractionValues.NOESY)
                           }
-        self.peak_bounds = {"H": 8.5, "C": 225}
-        self.shift_errors = {"H": 0.05, "C": 0.25}
         self.defined_nmrs = []
 
-    def add_nmr_signals(self, nmr_type, twod_peaks_string):
-        self.defined_nmrs.append(nmr_type)
-        if nmr_type not in self.nmr_types:
-            raise AttributeError("%s is not a valid NMR type" % nmr_type)
-        self.parse_signals(twod_peaks_string, nmr_type)
+    def add_nmr_signals(self, input_string, signal_type, signal_format):
+        self.defined_nmrs.append(signal_type)
+        if signal_type not in self.nmr_types:
+            raise AttributeError("%s not a valid signal type" % signal_type)
 
-    def parse_signals(self, twod_peaks_string, nmr_type):
+        if signal_format == "peak":
+            self.parse_peak_signals(input_string, signal_type)
+        elif signal_format == "integral":
+            raise NotImplemented("Haven't Processed 2D Integrals Yet...")
+        else:
+            raise AttributeError("%s not a valid format type" % signal_format)
+
+    def parse_peak_signals(self, peaks_string, nmr_type):
         """
         Parses peaks from file to table
         Remove small peaks and those outside the spectrum
         Rounds peaks to nearest valid coordinate, or removes if too far
-
-        If COSY, removes asymmetric peaks
         """
-        peaks_table = parse_peaks_string(twod_peaks_string)
-        peaks_table = self.clean_peaks_table(peaks_table, nmr_type)
-        for peak in peaks_table:
 
-
+        twod_peaks_table = parse_table(peaks_string, start_line=1)
+        for peak in twod_peaks_table:
             signal_type_pair = self.nmr_types[nmr_type]
-            signal1 = self.get_closest_1d_signal(peak[0], self.oned_signal_manager, signal_type_pair[0])
-            signal2 = self.get_closest_1d_signal(peak[1], self.oned_signal_manager, signal_type_pair[1])
-            if signal1 and signal2 and signal1 != signal2:
+            signal1 = self.get_closest_1d_signal(peak[0], peak[1], peak[4], signal_type_pair[0])
+            signal2 = self.get_closest_1d_signal(peak[2], peak[3], peak[5], signal_type_pair[1])
+            if signal1 != signal2:
                 self.twod_signals.append(TwoDSignal(signal1, signal2, nmr_type))
-            else:
-                print("%s Peak Removal: %s Varies by more than 0.1 from any peak" % ( nmr_type, str(peak[0:2])) )
-        if nmr_type == "COSY":
-            self.twod_signals = self.remove_asymmetric(self.twod_signals)
 
-    def get_closest_1d_signal(self, x_shift, oned_signal_manager, signal_type):
+    def get_closest_1d_signal(self, ppm_shift, freq_shift, freq_width, signal_type):
         """
         Returns 1d signal with shift closest to input shift
         """
-        dx = self.shift_errors[signal_type]
+        freq_spectrometer = freq_shift/ppm_shift
+        ppm_width = freq_width/freq_spectrometer
+        dx = ppm_width * fudge_factor
         closest_peak = None
-        for signal in oned_signal_manager.signals:
-            if abs(x_shift - signal.x_shift) < dx and signal_type == signal.signal_type:
+        for signal in self.oned_signal_manager.signals:
+            if abs(ppm_shift - signal.x_shift) < dx and signal_type == signal.signal_type:
                 closest_peak = signal
-                dx = abs(x_shift - signal.x_shift)
+                dx = abs(ppm_shift - signal.x_shift)
+
+        if not closest_peak:
+            for signal in self.oned_signal_manager.signals:
+                print(ppm_shift, abs(ppm_shift - signal.x_shift), ppm_width)
+            error_msg = "Invalid %s Peak: 2D Peak at %s, " \
+                            "Does not correspond to 1D Peak" % (signal_type, ppm_shift)
+            raise Exception(error_msg)
+
         return closest_peak
 
-    def remove_asymmetric(self, twod_signals):
-        """
-        Removes all twod signals that are not symmetric: Used for COSY spectrum
-        """
-        interactions_list = [[x.x_signal_numbers, x.y_signal_numbers] for x in twod_signals]
-        for signal in twod_signals:
-            if [signal.y_signal_numbers, signal.x_signal_numbers] not in interactions_list:
-                print("COSY Peak Removal: Signal %s at point %s is asymmetric" % (str([signal.x_signal_numbers, signal. y_signal_numbers]), str([signal.x_shift, signal.y_shift])))
-                twod_signals.remove(signal)
-                return self.remove_asymmetric(twod_signals)
-        return twod_signals
+    def get_interaction_data(self):
+        interaction_matrix = self.get_interaction_matrix()
+        type_array = self.get_type_array()
+        shift_values = self.get_shift_values()
+        return interaction_matrix, type_array, shift_values
 
-    def clean_peaks_table(self, peaks_table, nmr_type):
-        """
-        Removes peaks with low area or that lie outside of the nmr2 spectrum
-        """
-        x_signal_type = self.nmr_types[nmr_type][0]
-        y_signal_type = self.nmr_types[nmr_type][1]
-        for peak in peaks_table:
-            """
-            if peak[2] < 30 and nmr_type == "COSY":
-                print("%s Peak Removal: Peak %s is too small" % (nmr_type, peak))
-                peaks_table.remove(peak)
-                return self.clean_peaks_table(peaks_table, nmr_type)
-            """
-            if not(0 < peak[0] < self.peak_bounds[x_signal_type]) or not(0 < peak[1] < self.peak_bounds[y_signal_type]):
-                print("%s Peak Removal: Peak %s does not fall in correct boundary" % (nmr_type, peak))
-                peaks_table.remove(peak)
-                return self.clean_peaks_table(peaks_table, nmr_type)
-        return peaks_table
+    def get_shift_values(self):
+        return [signal.x_shift for signal in self.oned_signal_manager.signals]
 
+    def get_type_array(self):
+        return [signal.signal_type for signal in self.oned_signal_manager.signals]
 
     def get_interaction_matrix(self):
         print("Defined NMRS:", self.defined_nmrs)
@@ -109,44 +105,31 @@ class TwoDSignalManager:
     def infer_inadequate(self, interaction_matrix):
         """
         Who needs a description when you can have a picture?
-                       cosy
-                      H----H
-                hsqc  |    |  hsqc
-                      C<<>>C
-          implies  =>  inad bond between CC
+                         COSY
+                      H-------H
+                HSQC  |       |  HSQC
+                      C< INAD >C
+          implies  =>  INAD bond between CC
         """
-
         for i in range(len(interaction_matrix)):
-            cosy_i = [x for x, y in enumerate(interaction_matrix[i]) if y == 1]
-            hsqc_i = [x for x, y in enumerate(interaction_matrix[i]) if y == 2]
+            cosy_i = [x for x, y in enumerate(interaction_matrix[i]) if y == InteractionValues.COSY]
+            hsqc_i = [x for x, y in enumerate(interaction_matrix[i]) if y == InteractionValues.HSQC]
             b_cs = [x for x in cartesian(*[cosy_i, hsqc_i])]
             for b_c in b_cs:
                 b = b_c[0]
                 c = b_c[1]
-                d_s = [x for x, y in enumerate(interaction_matrix[b]) if y == 2]
+                d_s = [x for x, y in enumerate(interaction_matrix[b]) if y == InteractionValues.HSQC]
                 b_ds = [x for x in cartesian([c], d_s)]
                 for b_d in b_ds:
                     if b_d[0] != b_d[1]:
-                        interaction_matrix[b_d[0]][b_d[1]] = 4
+                        interaction_matrix[b_d[0]][b_d[1]] = InteractionValues.INAD
         return interaction_matrix
 
+    """
     def plot_twod_signals(self, nmr_type):
         plot_scatter([[signal.x_shift, signal.y_shift] for signal in self.twod_signals if signal.nmr_type == nmr_type])
+    """
 
-    def get_interaction_data(self):
-        type_array = []
-        signals = self.oned_signal_manager.signals
-        for signal in signals:
-            type_array.append(signal.signal_type)
-        shift_values = self.get_shift_values()
-        interaction_matrix = self.get_interaction_matrix()
-        return interaction_matrix, type_array, shift_values
-
-    def get_shift_values(self):
-        shift_values = []
-        for signal in self.oned_signal_manager.signals:
-            shift_values.append(signal.x_shift)
-        return shift_values
 
 class TwoDSignal:
     def __init__(self, signal1, signal2, nmr_type):
@@ -157,7 +140,8 @@ class TwoDSignal:
         self.nmr_type = nmr_type
 
     def get_interactions_list(self):
-        return [x for x in cartesian(*[self.x_signal_numbers, self.y_signal_numbers])]
+        return list(cartesian(*[self.x_signal_numbers, self.y_signal_numbers]))
+
 
 def plot_scatter(peaks):
     fig = plt.figure(figsize=(6,6))
