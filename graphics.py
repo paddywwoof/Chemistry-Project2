@@ -42,10 +42,6 @@ def get_MyBallAndStickRepresentation(interactions, interaction_colors):
     return MyBallAndStickRepresentation
 
 
-
-
-
-
 class MolecularGraphics:
     def __init__(self, coordinates, interaction_manager):
         type_array = [x.atom_type for x in interaction_manager.atoms]
@@ -55,15 +51,8 @@ class MolecularGraphics:
         self.system.bonds = bonds
         self.active = True
         self.viewer = QtMolecularViewer()
-
-        atoms = []
-        for index in range(len(coordinates)):
-            type = interaction_manager.atoms[index].atom_type
-            pos = coordinates[index]
-            atoms.append(Atom(type,pos))
-        mol = Molecule(atoms, interaction_manager.get_bonds_array())
-
-        self.system = System([mol])
+        self.coordinates = coordinates
+        self.system = self.get_system()
 
         self.viewer.add_representation(get_MyBallAndStickRepresentation(*self.get_through_space()), self.system)
 
@@ -73,6 +62,22 @@ class MolecularGraphics:
                 raise Exception("Atom List does not correspond to coordinate array")
         except Exception as e:
             self.disable(e)
+
+    def get_system(self):
+        atoms = []
+        for index in range(len(self.interaction_manager.atoms)):
+            type = self.interaction_manager.atoms[index].atom_type
+            pos = self.coordinates[index]
+            atoms.append(Atom(type,pos))
+        mol = Molecule(atoms, self.interaction_manager.get_bonds_array())
+        system = System([mol])
+        return system
+
+    def add_bondsetter(self, bond_setter):
+        self.viewer.namespace['__builtins__'].addbond = bond_setter
+
+    def add_atomsetter(self, atom_setter):
+        self.viewer.namespace['__builtins__'].addatom = atom_setter
 
     def print_indices(self):
         indices = self.viewer.representation.selection_state['atoms'].indices
@@ -117,7 +122,8 @@ class MolecularGraphics:
         return [self.interaction_manager.atoms[x] for x in selected_indices]
 
     def update(self, coordinates):
-        self.system.r_array = 3.5*coordinates
+        self.coordinates = coordinates
+        self.system = self.get_system()
         self.system.bonds = np.array(self.interaction_manager.get_bonds_array())
         self.viewer.clear()
         self.viewer.add_representation(get_MyBallAndStickRepresentation(*self.get_through_space()), self.system)

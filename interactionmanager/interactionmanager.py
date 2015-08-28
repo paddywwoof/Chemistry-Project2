@@ -7,7 +7,7 @@ from filemanager import FileManager
 from signalmanager import InteractionValues
 
 
-atom_valencies = {"C": 4, "H": 1, "O": 2}
+atom_valencies = {"C": 4, "H": 1, "O": 2, "N": 3}
 singlebond = [0, 100]
 doublebond = [100, 160]
 oxygen_bond = [160, 222]
@@ -18,6 +18,11 @@ class BondLengths:
     double_carbon = 0.142
     carbonyl = 0.123
     single_hydrogen = 0.109
+    carbonoxygen = 0.143
+
+    DEFAULT = 0.134
+
+
 
 class Interaction:
     def __init__(self, interaction_name, x_axis, repulsive_amplitude, repulsive_time_constant, attractive_amplitude,
@@ -125,13 +130,13 @@ class InteractionManager:
         self.interaction_matrix = interaction_matrix
 
         self.interaction_matrix[self.interaction_matrix == 1] = InteractionValues.DEFAULT
-
-
         self.interaction_matrix_original = np.copy(interaction_matrix)
         self.file_manager = FileManager()
         self.bonds = []
         self.atoms = []
         self.initialise_atoms(type_array, shift_data)
+
+
 
         """
         self.global_frag_distances = {
@@ -295,19 +300,20 @@ class InteractionManager:
             interaction.plot_graph(self.x_axis)
         plt.show()
 
-    def add_atom(self, shift_value, atom_type):
+    def add_atom(self, shift_value, atom_type, additional_atom=True):
         index_value = len(self.atoms)
         new_atom = Atom(index_value, shift_value, atom_type)
         self.atoms.append(new_atom)
+        if additional_atom:
+            self.add_matrix_entry(InteractionValues.NONE)
 
     def initialise_atoms(self, type_array, shift_data):
         for index, atom_type in enumerate(type_array):
-            self.add_atom(shift_data[index], atom_type)
+            self.add_atom(shift_data[index], atom_type, False)
 
         for shift_index, shift_value in enumerate(shift_data):  # Add Inferred C=O Oxygen atoms
             if between(shift_value, oxygen_bond):
                 self.add_atom(shift_value, "O")
-                self.add_matrix_entry()
                 self.set_interaction(shift_index, len(self.atoms)-1, InteractionValues.CARBONYL)
 
         bond_set = set()
@@ -321,9 +327,11 @@ class InteractionManager:
         for x in list(bond_set):
             self.add_bond(*x)
 
-    def add_matrix_entry(self):
+    def add_matrix_entry(self, value=0):
         im = np.zeros(shape=(len(self.interaction_matrix)+1, len(self.interaction_matrix)+1), dtype=self.interaction_matrix.dtype)
+        im.fill(value)
         im[:-1, :-1] = self.interaction_matrix
+        im[-1][-1] = InteractionValues.NONE
         self.interaction_matrix = im
 
     def print_matrix(self):
@@ -338,6 +346,7 @@ class InteractionManager:
     def add_bond(self, atom1, atom2, bond_order, interaction_type):
         new_bond = Bond(atom1, atom2, bond_order, interaction_type)
         self.bonds.append(new_bond)
+        self.update_all_bonds()
 
     def get_bond_order(self, index):
         return [bond.bond_order for bond in self.bonds]
@@ -452,8 +461,9 @@ class Bond:
         self.atom1 = atom1
         self.atom2 = atom2
         self.bond_indices = [atom1.index_value, atom2.index_value]
+        self.atom_types = [atom1.atom_type, atom2.atom_type]
         self.bond_order = 1
-        self.bond_length = 10
+        self.bond_length = BondLengths.DEFAULT
         self.inferred_by = inferred_by
         self.aromatic = aromatic
         if bond_order != 2 and aromatic:
@@ -465,21 +475,25 @@ class Bond:
         return self.bond_indices[key]
 
     def update_bond(self):
-        if "H" in [self.atom1.atom_type, self.atom2.atom_type]:
+        if "H" in self.atom_types and "C" in self.atom_types:
             if self.bond_length != BondLengths.single_hydrogen:
                 self.bond_length = BondLengths.single_hydrogen
                 return True
 
-        elif "O" in [self.atom1.atom_type, self.atom2.atom_type]:  # If C<>O Bond
+        elif "C" in self.atom_types and "O" in self.atom_types:  # If C<>O Bond
             if self.atom1.atom_type == "O":
                 oxygen = self.atom1
             else:
                 oxygen = self.atom2
+
             if between(oxygen.shift_value, oxygen_bond):
                 if self.bond_order != 2:
                     self.bond_order = 2
                     self.bond_length = BondLengths.carbonyl
                     return True
+            else:
+                self.bond_order = 1
+                self.bond_length = BondLengths.carbonoxygen
 
         elif ["C", "C"] == [self.atom1.atom_type, self.atom2.atom_type]:
             if self.atom1.needs_double_bond() and self.atom2.needs_double_bond():

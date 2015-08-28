@@ -82,6 +82,7 @@ class QtMolecularViewer(QtViewer):
 
         self.namespace = self.ipython.get_user_namespace()
         self.namespace['__builtins__'].viewer = self
+
         
         self.ipython.ex('from chemlab.mviewer.api.init import *')
         
