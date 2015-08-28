@@ -1,6 +1,5 @@
 from .signalparsers import parse_table, parse_1d_peak_list
 
-
 class OneDSignalManager:
     def __init__(self):
         self.number_signals = 0

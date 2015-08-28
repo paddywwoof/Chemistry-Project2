@@ -60,7 +60,7 @@ class BallAndStickRepresentation(Model):
                                 'box': Selection([], 1)}
         
         self.color_state = ArrayState([colors.default_atom_map.get(t, colors.deep_pink) for t in system.type_array])
-        self.radii_state = ArrayState([vdw_radii.get(t) * 0.3  for t in system.type_array])
+        self.radii_state = ArrayState([vdw_radii.get(t) * 0.3 for t in system.type_array])
         
         # Visualization classes
         self.atom_renderer = self.viewer.add_renderer(SphereImpostorRenderer,
@@ -129,6 +129,8 @@ class BallAndStickRepresentation(Model):
         self.bond_picker = CylinderPicker(self.viewer.widget,
                                           r_array.take(self.system.bonds[hmsk], axis=0),
                                           self.bond_radii[hmsk])
+
+
 
     def on_atom_hidden_changed(self):
         # When hidden state changes, the view update itself

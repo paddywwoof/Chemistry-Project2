@@ -1,0 +1,119 @@
+Aim:
+To Fully determine the chemical structure of a molecule
+based on NMR Data
+
+
+Reading NMR Data from file:
+	Reading NMR Types:
+		1D H1 and H13 NMR Spectra
+			Input Carbon Peak Data and Hydrogen Integration Data
+			 # Example of each goes here
+		2D COSY, HSQC, HMBC
+		
+		Integration Data from Hydrogen Spectrum determines the number of hydrogens
+		represented by that peak
+		
+		Generate a list of 1D Signals with shift value, signal type (C or H)
+		and multiplicity
+		
+		2D Signal Manager reads all 2D data and finds the corresponding 1D signals that it is closest to,
+			and generates a 2D Signal corresponding to this peak.
+			If the peak differs from any 1D peak in either coordinate by a specified error value, then it is ignored
+			In the case of the COSY spectra, asymmetric peaks are also removed
+		
+		The 2D Signal Manager then creates an NxN Interaction Matrix of all the interaction types
+		with a row/column for each atom (i.e. signals with multiplicities > 1 will have multiple equivalent adjacent rows/columns)
+		
+			[
+			1:COSY
+			2:HSQC
+			3:HMBC
+			]
+						
+		INADEQUATE interactions are then inferred using the method shown below:
+			#INSERT DIAGRAM HERE
+	
+				
+		Infer bonds using HMBC by focusing only on the 3-bond HMBC interactions
+		
+Interaction Manager:
+	Interaction Manager takes the interaction manager, a list of the atom types and their shift values
+	
+	Determines immediately obvious bonds,
+		HSQC implies H-C bonds,
+		INAD implies C-C and C=C bonds
+
+For the first minimser, the plan was to experiment attempting to determine the entire molecule using only an energy
+minimisation function and keep the level of 'expert knowledge' in the system to a minimum such that the system
+should behave in situations that hadn't been accounted for initially since the system should behave according to
+the simple fundamental rules.
+
+First Minimiser:
+    Used the Basin Hopping Algorithm with random displacements according to a delta energy/temperature function
+    which aims to reduce a global energy function determined by mutual interactions between atoms in the molecule.
+
+    The energy functions for each interaction type are displayed below:
+
+    and are the sum of an exponential and an inverse exponential.
+
+    Any atoms with no interaction between have a 'default' repulsive interaction type, preventing atoms from appearing to
+    form a bond by random chance. Since the atoms are initially near to the origin , this particular interaction type
+    was set to start with a lower magnitude than the others and increase gradually, since the energy function is
+    extremely high when the molecules are close together.
+
+
+
+    HMBC has a flat range from # to #, which are values chosen to approximate the range of possible lengths for either 2 or 3 bond interactions,
+        allowing a minimum range instead of just a single value
+
+    On each iteration, the solution is written to file, and OLEX is used to display the current best solution.
+
+
+
+    First tested using trans-2-hexenal, and performed relatively well though
+    took significantly longer and less reliably than expected to determine larger molecules such as
+    Cucumber Aldehyde (Trans-2, cis-6-nonadienal) - the molecule was not always determined correctly, and fell
+    into a different local minimum.
+
+    When tested with a larger molecule - 2ethyl indanone, there was no success at all
+    since the increased number of variables slowed the system such that no structure could be determined at all
+
+
+
+Second Minimiser:
+	Uses ChemLab to display molecule using OpenGL
+
+    Since the first energy minimiser was not entirely reliable, a different approach was taken:
+        An additional piece of information that is known about the structure that can actually be defined is
+        that the INAD and HSQC bonds are not only distance constraints, but actually represent known bonds, and that
+        instead of allowing these distances to eventually be reached by minimisation, these bonds are actually defined
+        before any minimisation starts.
+
+        This allows a group of 'fragments' to be created, which are contiguous chains of the molecule. The distances
+        between bonds are defined exactly, and instead of adjusting these coordinates, bonds are only rotated with respect
+        to either a randomly chosen axis or along the bond axis itself, and entire fragments can be translated
+        in space. Single atom fragments are translated instead of rotated.
+        This allows for all of the INADEQUATE and HSQC interactions to be satisfied by definition, and only the
+        2/3 Bond HMBC interaction types must be considered.
+
+        NOESY interaction data was also introduced as through space interactions
+        to determine distance between Hydrogens, in order to pull together unjoined fragments.
+
+
+Third Minimiser:
+	As a modification of the second minimiser method:
+
+	HMBC then implies inter-fragment bonds in the following manner:
+		Since HMBC usually represents 2/3 bond interactions try and form only 3-bond interactions
+			consider each HMBC interaction [HW,CZ]and check if is already satisfied
+			then check whether the valency of the carbon adjacent (CX) to HW is fully satisfied (eliminating the possibility of 2-bond interactions)
+			if there is only one carbon (CY) adjacent to CX with incomplete valency then this is the only carbon that will satisfy the HMBC
+			so a CY-CZ bond is created. If CY and CZ are in different fragments, these fragments are merged together.
+
+
+
+
+
+
+
+Initially used a

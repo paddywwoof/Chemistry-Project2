@@ -4,7 +4,14 @@ from math import sqrt
 import numpy as np
 import matplotlib.pyplot as plt
 from filemanager import FileManager
-from enum import Enum
+from signalmanager import InteractionValues
+
+
+atom_valencies = {"C": 4, "H": 1, "O": 2}
+singlebond = [0, 100]
+doublebond = [100, 160]
+oxygen_bond = [160, 222]
+mass_dict = {"C": 12, "O": 16, "H": 1, "N": 14}
 
 class BondLengths:
     single_carbon = 0.154
@@ -41,6 +48,7 @@ class Interaction:
         print("Plotting: " + self.interaction_name)
 
     def get_response_value(self, distance):
+        distance = min(distance, 10)
         return self.distance_function[int(distance*1000)]
 
 
@@ -56,6 +64,7 @@ class BondInteraction(Interaction):
     def get_response_value(self, distance):
         return 0
 
+
 class DefaultInteraction(Interaction):
     def __init__(self, x_axis, repulsive_amplitude, repulsive_time_constant, depth):
         self.interaction_name = "Default"
@@ -63,11 +72,6 @@ class DefaultInteraction(Interaction):
         self.distance_function = [0 for i in x_axis]
         for xi in x_axis:
             self.distance_function[xi] = self.depth * (repulsive_amplitude * math.exp(-xi/10*repulsive_time_constant))
-
-            #power=1
-            #aa=0
-
-        minimum = 0.154
         self.minimum_y = self.distance_function[np.argmin(self.distance_function)]
 
 
@@ -84,7 +88,7 @@ class HMBC(Interaction):
         rtc = repulsive_time_constant
         flat_range = [200, 385]
 
-        xi=0
+        xi = 0
         while xi < len(x_axis)-1:
             xi += 1
             if xi == flat_range[0]:
@@ -103,6 +107,7 @@ class HMBC(Interaction):
 
         print(self.interaction_name+", Minimum at: ", self.minimum, "Nanometres")
 
+
 class InteractionManager:
     """
     Managers the different types of interaction (e.g. HSQC, COSY etc, and their response values)
@@ -119,9 +124,7 @@ class InteractionManager:
         self.interaction_map = {}
         self.interaction_matrix = interaction_matrix
 
-        self.interaction_matrix[self.interaction_matrix == 1] = 0
-
-
+        self.interaction_matrix[self.interaction_matrix == 1] = InteractionValues.DEFAULT
 
 
         self.interaction_matrix_original = np.copy(interaction_matrix)
@@ -130,6 +133,7 @@ class InteractionManager:
         self.atoms = []
         self.initialise_atoms(type_array, shift_data)
 
+        """
         self.global_frag_distances = {
             (18, 10): 0.3963,
             (18, 15): 0.4834,
@@ -137,10 +141,9 @@ class InteractionManager:
             (15, 7): 0.3258
         }
 
-
-
         for i, j in self.global_frag_distances.keys():
-            self.set_interaction(i, j, 6, False)
+            self.set_interaction(i, j, InteractionValues.NOESY, False)
+        """
 
     def add_default_interaction(self, index, interaction_name, repulsive_amplitude, repulsive_time_constant, depth):
         """
@@ -157,7 +160,7 @@ class InteractionManager:
 
     def set_interaction(self, x, y, i_type, overwrite=True):
         current_i_type = self.interaction_matrix[x][y]
-        if overwrite or current_i_type in [0, 9]:
+        if overwrite or current_i_type in [InteractionValues.DEFAULT]:
             self.interaction_matrix[x][y] = i_type
             self.interaction_matrix[y][x] = i_type
 
@@ -204,7 +207,7 @@ class InteractionManager:
         self.interaction_map[index] = new_interaction
 
     def add_hmbc_interaction(self, index, interaction_name, repulsive_amplitude, repulsive_time_constant, depth,
-                            attractive_amplitude, attractive_time_constant, power, opt_class = Interaction):
+                            attractive_amplitude, attractive_time_constant, power):
         """
         Adds a new interaction to the interaction manager
 
@@ -237,25 +240,8 @@ class InteractionManager:
         return self.interaction_map[i_type].minimum
 
     def calculate_distance(self, v1, v2):
-        distance = sqrt( (v1[0]-v2[0]) ** 2 + (v1[1]-v2[1]) ** 2 + (v1[2]-v2[2]) ** 2)
+        distance = sqrt((v1[0]-v2[0]) ** 2 + (v1[1]-v2[1]) ** 2 + (v1[2]-v2[2]) ** 2)
         return min(10000, distance)
-
-    """
-    def get_force_coefficient(self, i, j, v1, v2):
-        interaction_type = self.interaction_matrix[j][i]
-
-        if interaction_type == 6:
-            if (i+2, j+2) in self.global_frag_distances:
-                scale = self.global_frag_distances[(i+2, j+2)]
-            elif (j+2, i+2) in self.global_frag_distances:
-                scale = self.global_frag_distances[(j+2, i+2)]
-        else:
-            scale = 1
-        interaction = self.interaction_map[interaction_type]
-        distance = np.linalg.norm(v2-v1)
-        delta = (interaction.minimum*scale - distance)
-        return delta*delta
-    """
 
     def interaction_response(self, i, j, v1, v2, debug=False, force=False):
         """
@@ -267,40 +253,46 @@ class InteractionManager:
         Returns:
             interaction response
         """
-        try:
-            interaction_type = self.interaction_matrix[j][i]
-            if interaction_type == 6:
-                if (i, j) in self.global_frag_distances:
-                    scale = self.global_frag_distances[(i, j)]
-                elif (j, i) in self.global_frag_distances:
-                    scale = self.global_frag_distances[(j, i)]
-                else:
-                    raise Exception("Scale not defined for %s, %s" % (i, j))
-            else:
-                scale = 1
-            distance = self.calculate_distance(v1/scale, v2/scale)  # in Nanometers
-            interaction = self.interaction_map[interaction_type]
-            response_value = interaction.get_response_value(distance)
-            if force and False:
 
-                response_value *= -1
-                response_value += interaction.minimum_y
-            a=abs((response_value - interaction.minimum_y))
-            if a > 0.1 and debug and interaction_type!=0:
-                print("Interaction %s,%s of type %s is not minimal" % (i, j, interaction.interaction_name), ": is %s should be %s" % (distance*scale, scale*interaction.minimum), "Response varies by %s "%a)
-            elif False:
-                print("Interaction %s,%s of type %s is minimal" % (i, j, interaction.interaction_name), ": is %s should be %s" % (distance*scale, scale*interaction.minimum), "Response varies by %s "%a)
-            return response_value
-        except IndexError:
+
+        interaction_type = self.interaction_matrix[j][i]
+
+        if interaction_type not in self.interaction_map.keys():
             return 0
-        except KeyError:
-            return 0
+
+        """
+        if interaction_type == InteractionValues.NOESY:
+            if (i, j) in self.global_frag_distances:
+                scale = self.global_frag_distances[(i, j)]
+            elif (j, i) in self.global_frag_distances:
+                scale = self.global_frag_distances[(j, i)]
+            else:
+                raise Exception("Scale not defined for %s, %s" % (i, j))
+        else:
+            scale = 1
+        """
+        scale = 1
+        distance = self.calculate_distance(v1/scale, v2/scale)  # in Nanometers
+        interaction = self.interaction_map[interaction_type]
+        response_value = interaction.get_response_value(distance)
+        """
+        if force and False:
+            response_value *= -1
+            response_value += interaction.minimum_y
+        """
+        """
+        a = abs((response_value - interaction.minimum_y))
+        if a > 0.1 and debug and interaction_type not in [InteractionValues.DEFAULT, InteractionValues.NONE]:
+            print("Interaction %s,%s of type %s is not minimal" % (i, j, interaction.interaction_name),
+                  ": is %s should be %s" % (distance*scale, scale*interaction.minimum),
+                  "Response varies by %s " % a)
+        """
+        return response_value
 
     def plot_all_interactions(self):
 
         for interaction in self.interaction_map.values():
             interaction.plot_graph(self.x_axis)
-        #pyplot.ion()
         plt.show()
 
     def add_atom(self, shift_value, atom_type):
@@ -316,19 +308,15 @@ class InteractionManager:
             if between(shift_value, oxygen_bond):
                 self.add_atom(shift_value, "O")
                 self.add_matrix_entry()
-                self.set_interaction(shift_index, len(self.atoms)-1, 7)
+                self.set_interaction(shift_index, len(self.atoms)-1, InteractionValues.CARBONYL)
 
         bond_set = set()
         for i in range(len(self.interaction_matrix)):
             for j in range(len(self.interaction_matrix)):
                 i_type = self.get_interaction(i, j)
-                if i_type in [2, 4, 5, 7]:
-                    if i_type in [5, 7]:
-                        bond_order = 1
-                    else:
-                        bond_order = 1
+                if i_type in InteractionValues.BOND_TYPES:
+                    bond_order = 1
                     bond_set.add((self.atoms[min(i, j)], self.atoms[max(i, j)], bond_order, i_type))
-
 
         for x in list(bond_set):
             self.add_bond(*x)
@@ -374,16 +362,6 @@ class InteractionManager:
     def get_free_valencies(self):
         return [atom.get_free_valency() for atom in self.atoms]
 
-
-    """
-    def update_bond(self, atom1, atom2, bond_order):
-        atom1.update_bond(atom2.index_value, bond_order)
-        atom2.update_bond(atom1.index_value, bond_order)
-        for i, bond in enumerate(self.bonds):
-            if bond[0:2] in [[atom1.index_value, atom2.index_value], [atom1.index_value, atom2.index_value]]:
-                self.bonds[i][2] = bond_order
-    """
-
     def update_all_bonds(self):
         # Keeps restarting updating bonds until bonds don't update any more
         for bond in self.bonds:
@@ -402,12 +380,6 @@ class InteractionManager:
                 elif atom != atom_chain[-2]:
                     self.update_bond(atom[-1], atom[-2], 2)
     """
-
-atom_valencies = {"C": 4, "H": 1, "O": 2}
-singlebond = [0, 100]
-doublebond = [100, 160]
-oxygen_bond = [160, 222]
-mass_dict = {"C": 12, "O": 16, "H": 1, "N": 14}
 
 def between(x, interval):
     if interval[0] <= x < interval[1]:
@@ -444,7 +416,8 @@ class Atom:
         if self.needs_double_bond():
             valency -= 1
         if valency < 0:
-            raise Exception("Negative Valency Error: %s Atom %s has negative valency" %(self.atom_type, self.index_value))
+            raise Exception("Negative Valency Error: %s Atom with shift %s"
+                            " has negative valency" %(self.atom_type, self.shift_value))
         return valency
 
     def __str__(self):
@@ -457,6 +430,7 @@ class Atom:
         return self.index_value
 
     def get_adjacent(self):
+
         return [bond.other(self) for bond in self.bonds]
 
     def add_bond(self, bond):
@@ -469,10 +443,12 @@ class Atom:
                 return bond
 
     def print_data(self):
-        print("Selected Atom:", " Type:", self.atom_type, " Shift Value:", self.shift_value)
+        print("Selected Atom: %s" % self.index_value, " Type:", self.atom_type, " Shift Value:", self.shift_value)
+
 
 class Bond:
     def __init__(self, atom1, atom2, bond_order, inferred_by, aromatic=False):
+
         self.atom1 = atom1
         self.atom2 = atom2
         self.bond_indices = [atom1.index_value, atom2.index_value]
@@ -555,7 +531,6 @@ class Bond:
                         atom_chain = atom_chain[:-2]
                     return True
         return False
-
 
     def other(self, atom):
         if atom == self.atom1:

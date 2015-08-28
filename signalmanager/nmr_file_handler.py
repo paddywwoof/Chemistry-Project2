@@ -1,6 +1,7 @@
 from . import OneDSignalManager, TwoDSignalManager
 import zipfile
 
+
 def get_twod_signal_manager(path):
     nmr_file = zipfile.ZipFile(path, "r")
 
