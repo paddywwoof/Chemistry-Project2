@@ -24,7 +24,7 @@ class VertexBuffer(object):
   def __del__(self):
     # this causes an error otherwise
     if bool(glDeleteBuffers):
-      glDeleteBuffers(1, GLuint(self.buffer))
+      glDeleteBuffers(1, [self.buffer])
     else:
       return
 

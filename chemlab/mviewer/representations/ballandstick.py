@@ -19,6 +19,7 @@ vdw_radii = cdb.get('data', 'vdwdict')
 elements = cdb.get('data', 'elements')
 
 from ..events import Model, Event
+import weakref
 
 class BallAndStickRepresentation(Model):
     

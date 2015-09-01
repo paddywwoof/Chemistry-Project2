@@ -21,7 +21,9 @@ def get_twod_signal_manager(path):
         oned_signal_manager.add_nmr_signals(nmr_string_dict[oned[0]], oned[1], oned[2])
 
     twod_signal_manager = TwoDSignalManager(oned_signal_manager)
-    for twod in ["COSY", "HSQC", "HMBC", "NOESY"]:
+
+    # HSQC is required and must be first for the program to run as expected
+    for twod in ["HSQC", "COSY", "HMBC", "NOESY"]:
         twod_signal_manager.add_nmr_signals(nmr_string_dict[twod], twod, "peak")
 
     return twod_signal_manager

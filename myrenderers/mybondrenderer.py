@@ -24,6 +24,10 @@ class MyBondRenderer(AbstractRenderer):
             Whether to render the bonds as cylinders or lines.
 
     '''
+    def delete(self):
+        self.cr1.delete()
+        self.cr2.delete()
+
     def __init__(self, widget, bonds, bond_colors, r_array, radius=0.02,
                  style="cylinders", shading='phong'):
         super(MyBondRenderer, self).__init__(widget)
@@ -80,7 +84,6 @@ class MyBondRenderer(AbstractRenderer):
 
         return bounds_a, bounds_b
 
-
     def draw(self):
         self.cr1.draw()
         self.cr2.draw()
@@ -89,7 +92,6 @@ class MyBondRenderer(AbstractRenderer):
         bounds_a, bounds_b = self._compute_bounds(r_array, self.bonds)
         if bounds_a.size == 0 or bounds_b.size == 0:
             return
-
 
         self.cr1.update_bounds(bounds_a)
         self.cr2.update_bounds(bounds_b)

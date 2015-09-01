@@ -149,6 +149,12 @@ class QChemlabWidget(QGLWidget):
         self._extra_textures = {'fb1': create_color_texture(self.fb1, self.width(), self.height()),
                                 'fb2': create_color_texture(self.fb2, self.width(), self.height())}
 
+    def disableGL(self):
+        glDisable(GL_DEPTH_TEST)
+        glDepthFunc(GL_LESS)
+        glDisable(GL_MULTISAMPLE)
+
+
 
     def paintGL(self):
         '''GL function called each time a frame is drawn'''

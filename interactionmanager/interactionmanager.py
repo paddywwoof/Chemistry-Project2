@@ -5,6 +5,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from filemanager import FileManager
 from signalmanager import InteractionValues
+from coordinatemanager import CoordinateManager
+from systemstate import SystemState
 
 
 atom_valencies = {"C": 4, "H": 1, "O": 2, "N": 3}
@@ -76,7 +78,14 @@ class DefaultInteraction(Interaction):
         self.depth = depth
         self.distance_function = [0 for i in x_axis]
         for xi in x_axis:
-            self.distance_function[xi] = self.depth * (repulsive_amplitude * math.exp(-xi/10*repulsive_time_constant))
+            if xi < 200:
+                self.distance_function[xi] = self.depth * (repulsive_amplitude * math.exp(-xi/10*repulsive_time_constant))
+            else:
+                self.distance_function[xi] = 100
+
+
+
+
         self.minimum_y = self.distance_function[np.argmin(self.distance_function)]
 
 
@@ -129,13 +138,16 @@ class InteractionManager:
         self.interaction_map = {}
         self.interaction_matrix = interaction_matrix
 
+        initial_coordinates = np.random.rand(len(interaction_matrix), 3)
+        self.coordinate_manager = CoordinateManager(initial_coordinates)
+
         self.interaction_matrix[self.interaction_matrix == 1] = InteractionValues.DEFAULT
         self.interaction_matrix_original = np.copy(interaction_matrix)
         self.file_manager = FileManager()
         self.bonds = []
         self.atoms = []
         self.initialise_atoms(type_array, shift_data)
-
+        self.system_states = []
 
 
         """
@@ -157,6 +169,60 @@ class InteractionManager:
         new_interaction = DefaultInteraction(self.x_axis, repulsive_amplitude, repulsive_time_constant, depth)
         self.interaction_map[index] = new_interaction
 
+    def savestate(self, message):
+        coordinates = self.coordinate_manager.get_coordinates()
+        atoms = self.atoms[:]
+        bonds = self.bonds[:]
+        im = np.copy(self.interaction_matrix)
+        new_state = SystemState(message, atoms, bonds, coordinates, im)
+        self.system_states.append(new_state)
+        print("Saving state %s..." % len(self.system_states))
+        self.current_state = new_state
+
+    def loadstate(self, state_number, revert=False):
+        if len(self.system_states) == 0:
+            print("No System States available to load")
+            return
+        if state_number is None or state_number >= len(self.system_states):
+            state_number = None
+            while state_number is None:
+                """
+                for index, state in enumerate(self.system_states):
+                    print("_" * 10 + "%s. State: %s" % (index+1, state.message) + "_" * 10)
+
+                    for atom in state.atoms:
+                        atom.print_data()
+
+                    for bond in state.bonds:
+                        bond.print_data()
+                    print("\n \n")
+                """
+                try:
+                    state_number = int(input("Choose a system state to load [%s-%s]: " %
+                                             (1, len(self.system_states)))) - 1
+                except ValueError:
+                    print("Invalid system state index")
+        else:
+            state_number = int(state_number)
+
+        if revert:
+            state_number = self.system_states.index(self.current_state) - 1
+
+        try:
+            print("Loading state %s..." % (state_number + 1))
+            old_state = self.system_states[state_number]
+            self.current_state = old_state
+
+        except IndexError:
+            print("Error Loading State")
+            return
+
+        self.coordinate_manager.force_update(old_state.coordinates)
+        for x in self.atoms + self.bonds:
+            del x  # Attempt to fix memory leak
+        self.atoms, self.bonds = old_state.get_data()
+        self.interaction_matrix = np.copy(old_state.interaction_matrix)
+
     def get_number_atoms(self):
         return len(self.interaction_matrix)
 
@@ -171,6 +237,9 @@ class InteractionManager:
 
     def get_interaction(self, x, y):
         return self.interaction_matrix[x][y]
+
+    def get_coordinates(self):
+        return self.coordinate_manager.get_coordinates()
 
     def get_all_interaction_atoms(self, interaction_type):
         interactions = []
@@ -305,7 +374,8 @@ class InteractionManager:
         new_atom = Atom(index_value, shift_value, atom_type)
         self.atoms.append(new_atom)
         if additional_atom:
-            self.add_matrix_entry(InteractionValues.NONE)
+            self.add_matrix_entry(InteractionValues.DEFAULT)
+            self.coordinate_manager.add_atom()
 
     def initialise_atoms(self, type_array, shift_data):
         for index, atom_type in enumerate(type_array):
@@ -332,6 +402,7 @@ class InteractionManager:
         im.fill(value)
         im[:-1, :-1] = self.interaction_matrix
         im[-1][-1] = InteractionValues.NONE
+        del self.interaction_matrix
         self.interaction_matrix = im
 
     def print_matrix(self):
@@ -340,12 +411,15 @@ class InteractionManager:
         for x, atom in enumerate(self.atoms):
             print(str(x)+" "*(2-len(str(x))), self.atoms[x].atom_type, str(self.interaction_matrix[x]).replace(" ", "   "), self.atoms[x].shift_value)
 
-    def write_numpy_to_mol(self, path, coordinates):
+    def write_numpy_to_mol(self, path):
+        coordinates = self.coordinate_manager.get_coordinates()
         self.file_manager.write_numpy_to_mol(path, self.bonds, self.atoms, coordinates)
 
     def add_bond(self, atom1, atom2, bond_order, interaction_type):
         new_bond = Bond(atom1, atom2, bond_order, interaction_type)
         self.bonds.append(new_bond)
+        indices = new_bond.get_indices()
+        self.set_interaction(indices[0], indices[1], InteractionValues.NONE)
         self.update_all_bonds()
 
     def get_bond_order(self, index):
@@ -389,6 +463,23 @@ class InteractionManager:
                 elif atom != atom_chain[-2]:
                     self.update_bond(atom[-1], atom[-2], 2)
     """
+    def revert(self):
+        self.coordinate_manager.revert()
+
+
+    def calculate_response_value(self):
+        atom_coordinates = self.coordinate_manager.get_coordinates()
+        response = 0
+        for i, v1 in enumerate(atom_coordinates):
+            for j, v2 in enumerate(atom_coordinates):
+                if j < i:
+                    response += self.interaction_response(i, j, v1, v2)
+        return response
+
+    def start_iter(self):
+        self.coordinate_manager.start_iter()
+
+
 
 def between(x, interval):
     if interval[0] <= x < interval[1]:
@@ -425,6 +516,7 @@ class Atom:
         if self.needs_double_bond():
             valency -= 1
         if valency < 0:
+            self.paused = True
             raise Exception("Negative Valency Error: %s Atom with shift %s"
                             " has negative valency" %(self.atom_type, self.shift_value))
         return valency
@@ -445,6 +537,7 @@ class Atom:
     def add_bond(self, bond):
         if bond not in self.bonds:
             self.bonds.append(bond)
+            bond.update_bond()
 
     def get_bond(self, atom):
         for bond in self.atoms:
@@ -452,12 +545,16 @@ class Atom:
                 return bond
 
     def print_data(self):
-        print("Selected Atom: %s" % self.index_value, " Type:", self.atom_type, " Shift Value:", self.shift_value)
+        print("Atom: %s" % self.index_value, " Type:", self.atom_type, " Shift Value:", self.shift_value)
+
+    def export(self):
+        return self.index_value, self.shift_value, self.atom_type
+
+
 
 
 class Bond:
     def __init__(self, atom1, atom2, bond_order, inferred_by, aromatic=False):
-
         self.atom1 = atom1
         self.atom2 = atom2
         self.bond_indices = [atom1.index_value, atom2.index_value]
@@ -470,6 +567,12 @@ class Bond:
             raise Exception("Only double bonds can be aromatic")
         self.atom1.add_bond(self)
         self.atom2.add_bond(self)
+
+    def print_data(self):
+        print("Bond Between Atoms %s %s" % tuple(self.bond_indices))
+
+    def export(self):
+        return self.bond_indices, self.bond_order, self.inferred_by, self.aromatic
 
     def __getitem__(self, key):
         return self.bond_indices[key]
@@ -502,8 +605,8 @@ class Bond:
                 If atom1 has only one double bond candidate and it is atom2, or vice versa
                 then atom1-atom2 is a double bond
                 """
-                atom1_doublebond_adjacents = [atom for atom in self.atom1.get_adjacent() if atom.needs_double_bond()]
-                atom2_doublebond_adjacents = [atom for atom in self.atom2.get_adjacent() if atom.needs_double_bond()]
+                atom1_doublebond_adjacents = [atom for atom in self.atom1.get_adjacent() if atom.needs_double_bond() and atom.get_free_valency() == 0]
+                atom2_doublebond_adjacents = [atom for atom in self.atom2.get_adjacent() if atom.needs_double_bond() and atom.get_free_valency() == 0]
 
                 a = len(atom1_doublebond_adjacents) == 1 and atom1_doublebond_adjacents[0] == self.atom2
                 b = len(atom2_doublebond_adjacents) == 1 and atom2_doublebond_adjacents[0] == self.atom1
@@ -519,7 +622,6 @@ class Bond:
                 if self.bond_length != BondLengths.single_carbon:
                     self.bond_length = BondLengths.single_carbon
                     return True
-
         return False
 
     def check_double_bond_rings(self, atom_chain=[]):

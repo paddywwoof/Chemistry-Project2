@@ -15,6 +15,7 @@ if app is None:
     app = QtGui.QApplication(sys.argv)
     app_created = True
     app.references = set()
+import weakref
 
 class FpsDraw(object):
     def __init__(self, parent):
@@ -68,14 +69,16 @@ class QtViewer(QMainWindow):
 
         # Pre-initializing an OpenGL context can let us use opengl
         # functions without having to show the window first...
-        context = QGLContext(QGLFormat(), None)
-        widget = QChemlabWidget(context, self)
-        context.makeCurrent()
+        self.context = QGLContext(QGLFormat(), None)
+        widget = QChemlabWidget(self.context, self)
+        self.context.makeCurrent()
         self.setCentralWidget(widget)
         self.resize(1000, 800)
         self.widget = widget
         
         self.key_actions = {}
+        self.refstore = []
+
         
     def run(self):
         '''Display the QtViewer
@@ -148,9 +151,16 @@ class QtViewer(QMainWindow):
         be able to update the renderer at run-time.
 
         '''
+
         renderer = klass(self.widget, *args, **kwargs)
-        self.widget.renderers.append(renderer)
-        return renderer
+        try:
+            renderer.shader
+        except:
+            renderer.shader = None
+        self.refstore.append(renderer)
+        self.widget.renderers.append(weakref.proxy(renderer))
+
+        return weakref.proxy(renderer)
     
     def remove_renderer(self, rend):
         '''Remove a renderer from the current view.
@@ -175,6 +185,7 @@ class QtViewer(QMainWindow):
 
         '''
         return rend in self.widget.renderers
+
     def update(self):
         super(QtViewer, self).update()
         self.widget.update()

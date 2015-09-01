@@ -19,7 +19,6 @@ class InteractionValues:
     THROUGH_SPACE = [COSY, HMBC, NOESY]
 
 
-
 class TwoDSignalManager:
     def __init__(self, oned_signal_manager):
         self.oned_signal_manager = oned_signal_manager
@@ -50,36 +49,70 @@ class TwoDSignalManager:
         """
 
         twod_peaks_table = parse_table(peaks_string, start_line=1)
+
+        new_signals = []
         for peak in twod_peaks_table:
             signal_type_pair = self.nmr_types[nmr_type]
-            signal1 = self.get_closest_1d_signal(peak[0], peak[1], peak[4], signal_type_pair[0])
-            signal2 = self.get_closest_1d_signal(peak[2], peak[3], peak[5], signal_type_pair[1])
-            if signal1 != signal2:
-                self.twod_signals.append(TwoDSignal(signal1, signal2, nmr_type))
+            signal1 = self.get_closest_1d_signal(peak[0], peak[1], peak[4], signal_type_pair[0], nmr_type)
+            signal2 = self.get_closest_1d_signal(peak[2], peak[3], peak[5], signal_type_pair[1], nmr_type)
+            if signal1 and signal2 and signal1 != signal2:
+                new_signals.append(TwoDSignal(signal1, signal2, peak[0], peak[2], nmr_type))
 
-    def get_closest_1d_signal(self, ppm_shift, freq_shift, freq_width, signal_type):
+        if nmr_type == "HSQC":
+            for signal in new_signals:
+                hydrogen = signal.signal2
+
+                signals = [x for x in new_signals if hydrogen == x.signal2] # H Gamma => C Alpha, C Beta
+                carbons = list(set([x.signal1 for x in new_signals if hydrogen == x.signal2]))
+
+                hydrogen_integral = hydrogen.multiplicity
+                signal_multiplicity = len(carbons)
+
+                if len(carbons) > 1:
+                    input("Attempting Experimental Signal Splitting")
+                    if hydrogen_integral == signal_multiplicity:
+                        self.oned_signal_manager.remove(hydrogen)
+                        for x in signals:
+                            self.oned_signal_manager.add(x.real_yshift, 1, "H")
+                    else:
+                        raise Exception("HSQC: Hydrogen Signal Corresponds to multiple carbons, cannot be resolved.")
+
+        self.twod_signals += new_signals
+
+    def get_closest_1d_signal(self, ppm_shift, freq_shift, freq_width, signal_type, nmr_type):
         """
         Returns 1d signal with shift closest to input shift
         Rounds peaks to nearest valid coordinate, else Raises Exception
         """
-        peak_width_scale = 2  # Fudge Factor
+        peak_width_scale = 2.5  # Fudge Factor
         freq_spectrometer = freq_shift/ppm_shift
         ppm_width = freq_width/freq_spectrometer
         dx = ppm_width * peak_width_scale
+        min_dx = 1000
+
         closest_peak = None
         for signal in self.oned_signal_manager.signals:
             if abs(ppm_shift - signal.x_shift) < dx and signal_type == signal.signal_type:
                 closest_peak = signal
                 dx = abs(ppm_shift - signal.x_shift)
+            min_dx = min(min_dx, abs(ppm_shift - signal.x_shift))
+
+
 
         if not closest_peak:
             for signal in self.oned_signal_manager.signals:
                 print(ppm_shift, abs(ppm_shift - signal.x_shift), ppm_width)
-            error_msg = "Invalid %s Peak: 2D Peak at %s, " \
-                        "Does not correspond to 1D Peak" % (signal_type, ppm_shift)
-            raise Exception(error_msg)
 
-        return closest_peak
+            error_msg = "Invalid %s Peak: 2D Peak at %s, " \
+                            "Does not correspond to 1D Peak by error %s, exceeds %s" % (nmr_type, ppm_shift, min_dx, dx)
+            print(error_msg)
+            discard_string = input("Discard Peak? (Y/N) [Y]:")
+
+            if (discard_string + " ").lower()[0] == "n":
+                raise Exception(error_msg)
+            return None
+        else:
+            return closest_peak
 
     def get_interaction_data(self):
         print("Defined NMRS:", self.defined_nmrs)
@@ -135,9 +168,13 @@ class TwoDSignalManager:
 
 
 class TwoDSignal:
-    def __init__(self, signal1, signal2, nmr_type):
+    def __init__(self, signal1, signal2, real_xshift, real_yshift, nmr_type):
+        self.signal1 = signal1
+        self.signal2 = signal2
         self.x_shift = round(float(signal1.x_shift), 2)
         self.y_shift = round(float(signal2.x_shift), 2)
+        self.real_xshift = real_xshift
+        self.real_yshift = real_yshift
         self.x_signal_numbers = signal1.signal_numbers
         self.y_signal_numbers = signal2.signal_numbers
         self.nmr_type = nmr_type

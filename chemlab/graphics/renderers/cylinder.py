@@ -27,6 +27,8 @@ class CylinderRenderer(AbstractRenderer):
         The color for each cylinder.
     
     '''
+
+
     def __init__(self, widget, bounds, radii, colors):
         self.bounds = bounds
         self.radii = radii
@@ -54,7 +56,8 @@ class CylinderRenderer(AbstractRenderer):
         self.n_cylinders = len(bounds)
         
         vertices, normals, colors = self._process_reference()
-        
+
+
         self.tr = TriangleRenderer(widget, vertices,  normals, colors)
         
     def draw(self):

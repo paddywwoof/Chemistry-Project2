@@ -38,6 +38,8 @@ class TriangleRenderer(DefaultRenderer):
         in the interval [0, 255]
     
     '''
+
+
     def __init__(self, widget, vertices, normals, colors, shading='phong'):
         super(TriangleRenderer, self).__init__(widget)
         

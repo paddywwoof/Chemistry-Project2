@@ -29,6 +29,7 @@ class IconButton(QtGui.QPushButton):
         self.setFixedSize(QSize(32, 32))
         self.setToolTip(text)
 
+
 class QtMolecularViewer(QtViewer):
     def __init__(self):
         super(QtMolecularViewer, self).__init__()
@@ -72,8 +73,9 @@ class QtMolecularViewer(QtViewer):
         wrapper2.setLayout(vb)
         
         dock2.setWidget(wrapper2)
-        self.addDockWidget(Qt.DockWidgetArea(Qt.BottomDockWidgetArea),
-                           dock2)
+        #self.addDockWidget(Qt.DockWidgetArea(Qt.BottomDockWidgetArea), dock2)
+        self.addDockWidget(Qt.DockWidgetArea(Qt.LeftDockWidgetArea), dock2)
+
         
         self.traj_controls.hide()
         ############################################
@@ -82,8 +84,6 @@ class QtMolecularViewer(QtViewer):
 
         self.namespace = self.ipython.get_user_namespace()
         self.namespace['__builtins__'].viewer = self
-
-        
         self.ipython.ex('from chemlab.mviewer.api.init import *')
         
     def add_representation(self, Repr, system):
@@ -122,4 +122,4 @@ class QtMolecularViewer(QtViewer):
             if 's' in self.keys:
                 self.keys['s']()
         return super(QtMolecularViewer, self).keyPressEvent(evt)
-        
+

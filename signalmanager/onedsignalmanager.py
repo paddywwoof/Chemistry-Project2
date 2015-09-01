@@ -17,8 +17,8 @@ class OneDSignalManager:
             raise AttributeError("%s not a valid format type" % signal_format)
 
     def parse_peak_signals(self, peak_string, signal_type):
-        carbon_table = parse_1d_peak_list(peak_string, start_line=1)
-        for row in carbon_table:
+        peak_table = parse_1d_peak_list(peak_string, start_line=1)
+        for row in peak_table:
             if row[1] == "Solvent":
                 print("Solvent Peak at shift %s" % row[0])
             else:
@@ -37,10 +37,33 @@ class OneDSignalManager:
                 self.signals.append(new_signal)
             self.number_signals += new_signal.multiplicity
 
+    def remove_signal(self, signal):
+        self.signals = [x for x in self.signals if x.x_shift != signal.x_shift]
+        self.number_signals -= signal.number_signals
+        self.update_signal_numbers()
+
+    def update_signal_numbers(self):
+        start_index = 0
+        for signal in self.signals:
+            signal.update_signal_numbers(start_index)
+            start_index += signal.multiplicity
+
+    def add_signal(self, x_shift1, magnitude, signal_type):
+        new_signal = OneDSignal(x_shift1, x_shift1, magnitude, signal_type, 0, False)
+        for x in range(new_signal.multiplicity):
+            self.signals.append(new_signal)
+            self.number_signals += new_signal.multiplicity
+        self.update_signal_numbers()
+
 
 class OneDSignal:
-    def __init__(self, x_shift1, x_shift2, magnitude, signal_type, start_index):
-        self.x_shift = round(0.5*x_shift1 + 0.5*x_shift2, 2)
+    def __init__(self, x_shift1, x_shift2, magnitude, signal_type, start_index, round_shift=True):
+        self.x_shift = 0.5*x_shift1 + 0.5*x_shift2
+        if round_shift:
+            self.x_shift = round(self.x_shift, 2)
         self.signal_type = signal_type
         self.multiplicity = int(round(magnitude))
+        self.signal_numbers = list(range(start_index, start_index + self.multiplicity))
+
+    def update_signal_numbers(self, start_index):
         self.signal_numbers = list(range(start_index, start_index + self.multiplicity))

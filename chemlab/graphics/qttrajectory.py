@@ -12,6 +12,7 @@ from .. import resources
 import numpy as np
 
 resources_dir = os.path.dirname(resources.__file__)
+import weakref
 
 class PlayStopButton(QtGui.QPushButton):
     
@@ -346,7 +347,7 @@ class QtTrajectoryViewer(QMainWindow):
         '''
         renderer = klass(self.widget, *args, **kwargs)
         self.widget.renderers.append(renderer)
-        return renderer
+        return weakref.proxy(renderer)
 
     def add_ui(self, klass, *args, **kwargs):
         '''Add an UI element for the current scene. The approach is

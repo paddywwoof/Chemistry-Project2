@@ -1,6 +1,6 @@
 from OpenGL.GL import (shaders,
                        GL_VERTEX_SHADER, GL_FRAGMENT_SHADER,
-                       glUseProgram, GL_FALSE, GLfloat, GL_TRUE)
+                       glUseProgram, GL_FALSE, GLfloat, GL_TRUE, glDeleteProgram, glDeleteShader, glDetachShader, )
 from ctypes import POINTER
 
 from ..shaders import set_uniform, compileShader
@@ -42,7 +42,7 @@ class AbstractRenderer(object):
 
         '''
         pass
-    
+
     
 
 class ShaderBaseRenderer(AbstractRenderer):
@@ -64,6 +64,9 @@ class ShaderBaseRenderer(AbstractRenderer):
         Fragment program as a string
     
     '''
+
+
+
     def __init__(self, widget, vertex, fragment):
         self.viewer = widget
         self.VERTEX_SHADER = vertex
@@ -80,21 +83,26 @@ class ShaderBaseRenderer(AbstractRenderer):
 
         '''
         raise NotImplementedError()
-        
+
+
     def compile_shader(self):
-        vertex = compileShader(self.VERTEX_SHADER,
+        self.vertex = compileShader(self.VERTEX_SHADER,
                                GL_VERTEX_SHADER)
-        fragment = compileShader(self.FRAGMENT_SHADER,
+        self.fragment = compileShader(self.FRAGMENT_SHADER,
                                  GL_FRAGMENT_SHADER)
-        
-        self.shader = shaders.compileProgram(vertex, fragment)
-        
+
+        self.shader = shaders.compileProgram(self.vertex, self.fragment)
+
     def setup_shader(self):
         glUseProgram(self.shader)
         # Setup the uniforms
         set_uniform(self.shader, "mvproj", "mat4fv", self.viewer.mvproj)
         set_uniform(self.shader, "lightDir", "3f", self.viewer.ldir)
         set_uniform(self.shader, "camera", "3f", self.viewer.camera.position)
+
+
+
+
 
 class DefaultRenderer(ShaderBaseRenderer):
     '''Same as

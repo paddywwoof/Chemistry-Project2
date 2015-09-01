@@ -14,7 +14,8 @@ class CylinderImpostorRenderer(ShaderBaseRenderer):
     render cylinders.
 
     """
-    
+
+
     def __init__(self, widget, bounds, radii, colors, shading='phong'):
         vert = pkgutil.get_data("chemlab.graphics.renderers.shaders",
                                               "cylinderimp.vert")
@@ -122,7 +123,9 @@ class CylinderImpostorRenderer(ShaderBaseRenderer):
         self._color_vbo = VertexBuffer(prim_colors, GL_DYNAMIC_DRAW)
         self._radii_vbo = VertexBuffer(prim_radii, GL_DYNAMIC_DRAW)
 
+
     def setup_shader(self):
+
         glUseProgram(self.shader)
         set_uniform(self.shader, 'model_view_rotation_mat', 'mat4fv',
                     self.viewer.camera._get_rotation_matrix())
