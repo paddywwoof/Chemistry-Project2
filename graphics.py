@@ -38,8 +38,7 @@ class MolecularGraphics:
         bonds = interaction_manager.get_bonds_array()
         self.interaction_manager = interaction_manager
         self.coordinates = self.interaction_manager.get_coordinates()
-        self.system = System.from_arrays(r_array=self.coordinates, type_array=type_array, mol_indices=[0])
-        self.system.bonds = bonds
+        self.system = self.get_system()
         self.active = True
         print("Initialising Graphics Handler")
         self.viewer = QtMolecularViewer()
@@ -51,7 +50,11 @@ class MolecularGraphics:
         self.coordinates = self.interaction_manager.get_coordinates()
         atoms = []
         for index in range(len(self.interaction_manager.atoms)):
-            type = self.interaction_manager.atoms[index].atom_type
+            atom = self.interaction_manager.atoms[index]
+            type = atom.atom_type
+            if type.upper() == "C":
+                if atom.get_free_valency()!=0:
+                    type = "Ne"
             pos = 3.5 * self.coordinates[index]
             atoms.append(Atom(type,pos))
         mol = Molecule(atoms, self.interaction_manager.get_bonds_array())

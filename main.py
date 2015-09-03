@@ -251,7 +251,10 @@ class EnergyMinimiser:
          => Stops counting bonds beyond this due to unnecessary computation
 
         Args:
-            atom1 
+            atom1 (Atom) : First Atom
+            atom2 (Atom) : Second Atom
+        Returns:
+            distance (int) : Distance between atoms in bonds
 
         """
         one_bond_atoms = self.get_adjacent(atom1)
@@ -348,7 +351,7 @@ class EnergyMinimiser:
 
     def iteration(self):
         try:
-            if self.paused and False:
+            if self.paused:
                 self.printout()
                 return
             self.printout()
