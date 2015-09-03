@@ -2,6 +2,7 @@ __author__ = 'martin'
 
 import matplotlib.pyplot as plt
 
+
 def get_raw_peaks(path):
     peaks_file = open(path)
     peaks_string = peaks_file.read()
@@ -12,10 +13,12 @@ def get_raw_peaks(path):
         peak_coordinates.remove([])
     return peak_coordinates
 
+
 def main():
     cosy_peak_points = get_raw_peaks('cosy peaks indanone.txt')
     print(cosy_peak_points)
     plot_graphs(cosy_peak_points)
+
 
 def plot_graphs(coordinates):
     fig = plt.figure(figsize=(6,6))

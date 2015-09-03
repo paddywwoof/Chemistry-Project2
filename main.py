@@ -7,15 +7,22 @@ from interactionmanager import InteractionManager
 from signalmanager import get_twod_signal_manager, InteractionValues
 import time
 from tkinter import filedialog
-import sys
+
 
 def clear():
     os.system('cls' if os.name == 'nt' else 'clear')
 
 
-class ChemLabMinimiser:
+class EnergyMinimiser:
     def __init__(self, path=None, mass=None):
-
+        """
+        Constructor for the Minimiser Class
+        Args:
+            path (str) : Path to zip folder containing NMR files [Optional]
+            mass (float) : Floating Point Value of Molecular Mass [Optional]
+        Returns:
+            None
+        """
         if path is None:
             path = filedialog.askopenfilename(title="Open Zipped NMR File")
         self.interaction_manager = get_interaction_manager(path)
@@ -34,15 +41,24 @@ class ChemLabMinimiser:
         self.fragments = self.generate_fragments_list()
         self.hmbc_complete = False
         self.paused = False
-        self.printonce = False
         self.update = False
         self.start_time = None
-
         self.graphics = MolecularGraphics(self.interaction_manager)
         clear()
 
-        def viewer_addbond(atom1=None, atom2=None, bond_order=1):
+        def viewer_add_bond(atom1=None, atom2=None, bond_order=1):
+            """
+            Function for the iPython terminal to manually add new bonds between atoms
+            Can accept manually defined atoms, but usually used by selecting two atoms
+            using the graphics interface and using this bond function interactively.
 
+            Args:
+                atom1 (Atom) : First Atom in the new bond
+                atom2 (Atom) : Second Atom in the new bond
+                bond_order (float): Order of the new bond
+            Returns:
+                None
+            """
             if not atom1 or not atom2:
                 selected_atoms = self.get_selected_atoms()
                 if len(selected_atoms) != 2:
@@ -56,30 +72,37 @@ class ChemLabMinimiser:
             self.fragments = self.generate_fragments_list()
             self.update = True
             unpause()
-            savestate(message)
+            save_state(message)
             for x in range(len(self.fragments)+1):
                 self.iteration()
             pause()
-            self.printonce = True
 
+        def viewer_add_atom(atom_type):
+            """
+            Function for the iPython terminal to manually add new atoms.
+            Requires the new atom type to be defined. The Atom is added to the origin,
+            and if another atom is selected, then a new bond is created between this
+            atoms and the new atom
 
-        def viewer_addatom(atom_type):
+            Args:
+                atom_type (Str): Type of Atom "C", "H", "N" etc
+            Returns:
+                Nones
+            """
             selected_atoms = self.get_selected_atoms()
             message = "Added Atom of Type %s" % atom_type
             self.add_atom(atom_type)
             if len(selected_atoms) == 1:
-                viewer_addbond(selected_atoms[0], self.interaction_manager.atoms[-1])
-            savestate(message)
+                viewer_add_bond(selected_atoms[0], self.interaction_manager.atoms[-1])
+            save_state(message)
             for x in range(len(self.fragments)+1):
                 self.iteration()
             pause()
-            self.printonce = True
 
-
-        def savestate(message="Manual State Save"):
+        def save_state(message="Manual State Save"):
             self.interaction_manager.savestate(message)
 
-        def loadstate(state_number=None, revert=False):
+        def load_stage(state_number=None, revert=False):
             if state_number:
                 state_number -= 1
             pause()
@@ -90,10 +113,9 @@ class ChemLabMinimiser:
             unpause()
 
         def revert():
-            loadstate(0, True)
+            load_stage(0, True)
 
         def pause():
-
             self.paused = True
 
         def unpause():
@@ -103,18 +125,25 @@ class ChemLabMinimiser:
 
         """Injecting Interactive Functions into IPython Terminal"""
         namespace = self.graphics.get_namespace()
-        namespace.addbond = viewer_addbond
-        namespace.addatom = viewer_addatom
-        namespace.savestate = savestate
+        namespace.add_bond = viewer_add_bond
+        namespace.add_atom = viewer_add_atom
+        namespace.save_state = save_state
         namespace.revert = revert
-        namespace.loadstate = loadstate
+        namespace.load_state = load_stage
         namespace.pause = pause
         namespace.unpause = unpause
         namespace.resume = unpause
 
     def generate_fragments_list(self):
         """
-        Creates a list of fragment objects
+        Traverses the bonds between atoms in the system and
+        generates fragment objects of contiguous chains of atoms
+
+        Args:
+            None
+        Returns:
+            fragments (List[Fragment]) : List of Fragment objects
+
         """
 
         fragments = []
@@ -139,8 +168,15 @@ class ChemLabMinimiser:
         return fragments
 
     def check_unsatisfied_hmbc(self):
-        hmbc_interactions = self.interaction_manager.get_all_interaction_atoms(InteractionValues.HMBC)
+        """
+        Gets all HMBC interactions from the interaction manager and checks which are satisfied
 
+        Args:
+            None
+        Returns:
+            hmbc_interactions ( List[[x,y]] ) : List of unsatisfied HMBC interactions defined by atom indices
+        """
+        hmbc_interactions = self.interaction_manager.get_all_interaction_atoms(InteractionValues.HMBC)
         for hmbc in hmbc_interactions:
             if self.bond_distance(hmbc[0], hmbc[1]) in [2, 3]:
                 self.interaction_manager.set_interaction(hmbc[0].index_value, hmbc[1].index_value, InteractionValues.DEFAULT)
@@ -151,18 +187,35 @@ class ChemLabMinimiser:
         return hmbc_interactions
 
     def add_atom(self, atom_type):
+        """
+        Manually adds a new atom to the system, the regenerates the fragments
+        Fragment list is regenerated to incorporate the new atom
+
+        Args:
+            atom_type (str) : Type of Atom (e.g. "H", "C", "N", etc
+
+        """
         self.interaction_manager.add_atom(0, atom_type)
         self.fragments = self.generate_fragments_list()
         self.update = True
 
     def infer_hmbc(self):
+        """
+        Logically determines which bonds can be inferred with certainty
+        according to the 2/3 Bond HMBC interactions, by considering those
+        which cannot be 2-Bond interactions and finding the only
+        configuration that would satisfy a 3-Bond correlation.
+
+        Args:
+            None
+        Returns:
+            None
+        """
+
         self.hmbc_complete = False
-
         hmbc_interactions = self.check_unsatisfied_hmbc()
-
         if len(hmbc_interactions) == 0:
             self.hmbc_complete = True
-
 
         for hmbc in hmbc_interactions:
             for frag1 in self.fragments:
@@ -184,16 +237,23 @@ class ChemLabMinimiser:
                             continue
                         else:
                             cx = bonded_carbons[0]
-
                         hmbc_type1 = self.add_hmbc_bond(cx, cz, frag1, frag2, hmbc)
                         if hmbc_type1:
                             return True
-
                         hmbc_type2 = self.add_hmbc_bond(cz, cx, frag2, frag1, hmbc)
                         if hmbc_type2:
                             return True
 
     def bond_distance(self, atom1, atom2):
+        """
+        Finds the bond distance between adjacent atoms in the system.
+        Whilst this can be generalised to n-bonds, we only care about bonds in range 1-4
+         => Stops counting bonds beyond this due to unnecessary computation
+
+        Args:
+            atom1 
+
+        """
         one_bond_atoms = self.get_adjacent(atom1)
         two_bond_atoms = uniq([self.get_adjacent(x, one_bond_atoms+[atom1]) for x in one_bond_atoms])
         three_bond_atoms = uniq([self.get_adjacent(x, one_bond_atoms+two_bond_atoms+[atom1]) for x in two_bond_atoms])
@@ -277,7 +337,6 @@ class ChemLabMinimiser:
             print("Current Iteration Rate: %s " % iteration_rate)
             print(end_section)
 
-
         print("__HMBC Interactions__")
         if self.hmbc_complete:
             print("All HMBC Interactions Satisfied")
@@ -287,13 +346,10 @@ class ChemLabMinimiser:
             print(hmbcs)
         print(end_section)
 
-
     def iteration(self):
         try:
-            if self.paused:
-                if self.printonce:
-                    self.printout()
-                    self.printonce = False
+            if self.paused and False:
+                self.printout()
                 return
             self.printout()
             self.iteration_number += 1
@@ -304,7 +360,7 @@ class ChemLabMinimiser:
                 self.interaction_manager.update_all_bonds()
 
                 fragment = self.fragments[0]
-                if 1:
+                if True:
                     fragment.project_bond_lengths()
                     self.start_iter()
                     fragment.rotate_bonds()
@@ -319,10 +375,10 @@ class ChemLabMinimiser:
                 else:
                     self.update_coordinates()
                 self.fragments = self.fragments[1:] + [fragment]
-                self.interaction_manager.write_numpy_to_mol("tempfile.mol")
+                self.interaction_manager.write_numpy_to_mol("resources/tempfile.mol")
         except Exception as e:
             print(str(e))
-            self.paused = True
+            self.update_graphics()
 
     def start_iter(self):
         self.interaction_manager.start_iter()
@@ -376,7 +432,7 @@ class Fragment:
             frozen, unfrozen = self.bisect_on_bond(bond)
             bond_vector = atom_coordinates[bond.atom1.index_value] - atom_coordinates[bond.atom2.index_value]
             current_bond_length = np.linalg.norm(bond_vector)
-            bond_length = bond.bond_length + random.uniform(-0.025, 0.025)
+            bond_length = bond.bond_length
             corrected_bond_vector = bond_vector * (bond_length/current_bond_length)
             atom_coordinates[frozen] += (corrected_bond_vector-bond_vector)
         self.coordinate_manager.update(atom_coordinates)
@@ -473,14 +529,14 @@ class Fragment:
 
 def get_interaction_manager(path):
     twod_signal_manager = get_twod_signal_manager(path)
-    interaction_matrix, type_array, shift_data = twod_signal_manager.get_interaction_data()
-    interaction_manager = InteractionManager(1001, interaction_matrix, type_array, shift_data)
+    interaction_matrix, type_array, shift_data, distance_matrix = twod_signal_manager.get_interaction_data()
+    interaction_manager = InteractionManager(1001, interaction_matrix, type_array, shift_data, distance_matrix)
 
     interaction_manager.add_default_interaction(index=InteractionValues.DEFAULT,
                                                 interaction_name="Default Repulsive",
                                                 repulsive_amplitude=0.8,
                                                 repulsive_time_constant=0.2,
-                                                depth=100)
+                                                depth=1000)
 
     interaction_manager.add_hmbc_interaction(index=InteractionValues.HMBC,
                                              interaction_name="HMBC 2/3 Bond H-C",
@@ -514,7 +570,7 @@ def main():
         path = sys.argv[1]
     if len(sys.argv) > 2:
         mass = int(sys.argv[2])
-    clm = ChemLabMinimiser(path=path, mass=mass)
+    clm = EnergyMinimiser(path=path, mass=mass)
     clm.main()
 
 

@@ -77,7 +77,6 @@ class QtViewer(QMainWindow):
         self.widget = widget
         
         self.key_actions = {}
-        self.refstore = []
 
         
     def run(self):
@@ -153,14 +152,8 @@ class QtViewer(QMainWindow):
         '''
 
         renderer = klass(self.widget, *args, **kwargs)
-        try:
-            renderer.shader
-        except:
-            renderer.shader = None
-        self.refstore.append(renderer)
-        self.widget.renderers.append(weakref.proxy(renderer))
-
-        return weakref.proxy(renderer)
+        self.widget.renderers.append(renderer)
+        return renderer
     
     def remove_renderer(self, rend):
         '''Remove a renderer from the current view.

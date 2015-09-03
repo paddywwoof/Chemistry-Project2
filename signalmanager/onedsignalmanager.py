@@ -39,7 +39,7 @@ class OneDSignalManager:
 
     def remove_signal(self, signal):
         self.signals = [x for x in self.signals if x.x_shift != signal.x_shift]
-        self.number_signals -= signal.number_signals
+        self.number_signals -= signal.multiplicity
         self.update_signal_numbers()
 
     def update_signal_numbers(self):

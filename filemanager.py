@@ -11,7 +11,7 @@ class FileManager:
         self.start_time = time.time()
 
     def write_numpy_to_xyz(self, filename, atom_coordinates, type_array):
-        print("Writing to %s"%(os.pat.abspath(filename)))
+        print("Writing to %s" % (os.path.abspath(filename)))
         self.last_write = time.time()
         xyz_string = self.convert_numpy_to_xyz_string(atom_coordinates, type_array)
         writefile(filename, xyz_string)
@@ -20,7 +20,7 @@ class FileManager:
         signal_info = type_array
         xyz_string = str(len(atom_coordinates))+"\n"
         xyz_string += "Energy Minimised Cartesian Coordinates\n"
-        for i,atom in enumerate(atom_coordinates):
+        for i, atom in enumerate(atom_coordinates):
             xyz_string += (signal_info[i]+" "+str(atom_coordinates[i][0]/10)+" "+str(atom_coordinates[i][1]/10)+" "+str(atom_coordinates[i][2]/10)+"\n")
         return xyz_string
 

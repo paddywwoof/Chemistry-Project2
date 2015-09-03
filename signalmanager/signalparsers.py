@@ -1,5 +1,6 @@
 import numpy as np
 
+
 """
 def parse_integration_string(integration_string):
     integration_string = integration_string.replace("\t", " ")
@@ -10,6 +11,7 @@ def parse_integration_string(integration_string):
     return np.array(integration_table)
 """
 
+
 def parse_peaks_string(twod_peaks_string):
     peak_string_list = twod_peaks_string.splitlines()
     peak_string_list = peak_string_list[1:] # Removes the Title Line
@@ -19,8 +21,8 @@ def parse_peaks_string(twod_peaks_string):
     return peak_points
 
 
-def parse_table(integral_table_string, start_line=0):
-    d = integral_table_string.splitlines()[start_line:]
+def parse_table(table_string, start_line=0):
+    d = table_string.splitlines()[start_line:]
     e = [np.fromstring(x, sep="\t") for x in d]
     f = [x for x in e if len(x) == len(e[0])]
     return np.array(f)
@@ -43,6 +45,7 @@ def parse_1d_peak_list(list_string, start_line=0):
 
 
 if __name__ == "__main__":
+    """
     proton_string = open("C:\\Users\\Martin\\Desktop\\NMR Samples\\edmpc_new_format\\proton.txt").read()
     proton_table = parse_table(proton_string, start_line=0)
     print(proton_table)
@@ -54,6 +57,8 @@ if __name__ == "__main__":
     cosy_string = open("C:\\Users\\Martin\\Desktop\\NMR Samples\\edmpc_new_format\\cosy.txt").read()
     cosy_table = parse_table(cosy_string, start_line=1)
     print(cosy_table)
-
-
+    """
+    noesy_string = open("C:\\Users\\Martin\\Desktop\\noesy.txt").read()
+    noesy_table = parse_table(noesy_string, start_line=1)
+    print(noesy_table)
 

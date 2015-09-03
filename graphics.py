@@ -1,14 +1,9 @@
 from chemlab.mviewer.qtmolecularviewer import QtMolecularViewer
-from chemlab.mviewer.api.display import reload_system
 from chemlab.mviewer.representations.ballandstick import BallAndStickRepresentation
 from chemlab.core import System, Atom, Molecule
 import numpy as np
 from myrenderers.mybondrenderer import MyBondRenderer
-from chemlab.graphics.renderers import BondRenderer
 from signalmanager import InteractionValues
-from PyQt4.QtOpenGL import *
-from chemlab.graphics.qchemlabwidget import QChemlabWidget
-
 
 
 class Colors:
@@ -29,7 +24,6 @@ bond_colors_dict = {2: Colors.orange, 3: Colors.blue, 4: Colors.grey, 7: Colors.
 
 
 class MyBallAndStickRepresentation(BallAndStickRepresentation):
-
     def __init__(self, interactions, interaction_colors, *args):
         super(MyBallAndStickRepresentation, self).__init__(*args)
         self.interaction_renderer = self.viewer.add_renderer(MyBondRenderer, interactions, interaction_colors, self.system.r_array, style='impostors', radius=0.005)
@@ -37,8 +31,6 @@ class MyBallAndStickRepresentation(BallAndStickRepresentation):
     def update_positions(self, r_array):
         super(MyBallAndStickRepresentation, self).update_positions(r_array)
         self.interaction_renderer.update_positions(r_array)
-
-
 
 class MolecularGraphics:
     def __init__(self, interaction_manager):
@@ -49,25 +41,11 @@ class MolecularGraphics:
         self.system = System.from_arrays(r_array=self.coordinates, type_array=type_array, mol_indices=[0])
         self.system.bonds = bonds
         self.active = True
-        self.iterfunction = None
         print("Initialising Graphics Handler")
-
         self.viewer = QtMolecularViewer()
-        self.update()
-        self.timer = None
-
-        """
-        self.system = self.get_system()
-        self.viewer.clear()
-        interactions, interaction_colors = self.get_through_space()
-        self.viewer.representation = MyBallAndStickRepresentation(interactions, interaction_colors, self.viewer, self.system)
-        self.viewer.system = self.system
-        """
-
         self.update()
         if len(self.coordinates) != len(interaction_manager.atoms):
             raise Exception("Atom List does not correspond to coordinate array")
-
 
     def get_system(self):
         self.coordinates = self.interaction_manager.get_coordinates()
@@ -107,7 +85,6 @@ class MolecularGraphics:
         return np.array(interactions), np.array(interaction_colors)
 
     def run(self, iterfunction=None):
-        self.iterfunction = iterfunction
         if self.active:
             if iterfunction:
                 self.timer = self.viewer.schedule(iterfunction, 200)
@@ -123,17 +100,10 @@ class MolecularGraphics:
         selected_indices = self.viewer.representation.selection_state['atoms'].indices
         return [self.interaction_manager.atoms[x] for x in selected_indices]
 
-    #@profile
     def update(self):
         self.system = self.get_system()
         self.viewer.clear()
-
-        del self.viewer.refstore[:]
-        self.viewer.refstore = []
-
         interactions, interaction_colors = self.get_through_space()
         self.viewer.system = self.system
         self.viewer.representation = MyBallAndStickRepresentation(interactions, interaction_colors,
                                                                   self.viewer, self.system)
-
-import gc

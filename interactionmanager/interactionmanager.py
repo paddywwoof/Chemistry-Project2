@@ -78,10 +78,7 @@ class DefaultInteraction(Interaction):
         self.depth = depth
         self.distance_function = [0 for i in x_axis]
         for xi in x_axis:
-            if xi < 200:
-                self.distance_function[xi] = self.depth * (repulsive_amplitude * math.exp(-xi/10*repulsive_time_constant))
-            else:
-                self.distance_function[xi] = 100
+            self.distance_function[xi] = self.depth * (repulsive_amplitude * math.exp(-xi/10*repulsive_time_constant))
 
 
 
@@ -126,7 +123,7 @@ class InteractionManager:
     """
     Managers the different types of interaction (e.g. HSQC, COSY etc, and their response values)
     """
-    def __init__(self, axis_width, interaction_matrix, type_array, shift_data):
+    def __init__(self, axis_width, interaction_matrix, type_array, shift_data, distance_matrix):
         """
         Args:
             axis_width: Number of points to generate function mapping for
@@ -148,19 +145,8 @@ class InteractionManager:
         self.atoms = []
         self.initialise_atoms(type_array, shift_data)
         self.system_states = []
+        self.distance_matrix = distance_matrix
 
-
-        """
-        self.global_frag_distances = {
-            (18, 10): 0.3963,
-            (18, 15): 0.4834,
-            (18, 13): 0.4781,
-            (15, 7): 0.3258
-        }
-
-        for i, j in self.global_frag_distances.keys():
-            self.set_interaction(i, j, InteractionValues.NOESY, False)
-        """
 
     def add_default_interaction(self, index, interaction_name, repulsive_amplitude, repulsive_time_constant, depth):
         """
@@ -334,26 +320,15 @@ class InteractionManager:
         if interaction_type not in self.interaction_map.keys():
             return 0
 
-        """
         if interaction_type == InteractionValues.NOESY:
-            if (i, j) in self.global_frag_distances:
-                scale = self.global_frag_distances[(i, j)]
-            elif (j, i) in self.global_frag_distances:
-                scale = self.global_frag_distances[(j, i)]
-            else:
-                raise Exception("Scale not defined for %s, %s" % (i, j))
+            scale = self.distance_matrix[i][j]
         else:
             scale = 1
-        """
         scale = 1
         distance = self.calculate_distance(v1/scale, v2/scale)  # in Nanometers
         interaction = self.interaction_map[interaction_type]
         response_value = interaction.get_response_value(distance)
-        """
-        if force and False:
-            response_value *= -1
-            response_value += interaction.minimum_y
-        """
+
         """
         a = abs((response_value - interaction.minimum_y))
         if a > 0.1 and debug and interaction_type not in [InteractionValues.DEFAULT, InteractionValues.NONE]:
@@ -361,6 +336,7 @@ class InteractionManager:
                   ": is %s should be %s" % (distance*scale, scale*interaction.minimum),
                   "Response varies by %s " % a)
         """
+
         return response_value
 
     def plot_all_interactions(self):
@@ -516,7 +492,6 @@ class Atom:
         if self.needs_double_bond():
             valency -= 1
         if valency < 0:
-            self.paused = True
             raise Exception("Negative Valency Error: %s Atom with shift %s"
                             " has negative valency" %(self.atom_type, self.shift_value))
         return valency
